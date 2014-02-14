@@ -183,10 +183,10 @@ public class Board {
 	
 	
   /**
-   * Returns the lenght of the path (i.e. the number of transitions)
+   * Returns the length of the path (i.e. the number of transitions)
    * from the start state to this one
    * 
-   * @return the lenght of the path from the start state
+   * @return the length of the path from the start state
    */
   public int getPathLength() {
     if (pathCache == null)
