@@ -27,5 +27,5 @@ run: all
 	java eightPuzzle | tee output
 
 time: run
-	grep -i -e "=" -e incorrect -e duration -e nodes output --color=auto
+	grep -i -e "=" -e 'h(n)' -e duration -e nodes output --color=auto
 
