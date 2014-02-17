@@ -23,6 +23,8 @@ public class eightPuzzle {
 		int[] array = {5,6,7,4,0,8,3,2,1};//worst
 		
 		Board b = new Board(array);
+//		b = Board.randomBoard();
+		b.setGoal(goal);
 
 		// DFS
 		eightPuzzle solver = new eightPuzzle();
@@ -50,7 +52,6 @@ public class eightPuzzle {
 		//BestFS
 		// use the incorrect tiles heuristic
 		b = new Board(array);//easy (d=5)
-		b.setGoal(goal);
 		b.setHeuristicType(Board.HEURISTIC.INCORRECT_TILES);
 		solver = new eightPuzzle();
 		System.out.println("===BestFS===");
@@ -94,7 +95,7 @@ public class eightPuzzle {
 		solver.aStarSearch(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("A* (IncorrectTiles) duration = %3.5f s\n", (double) duration
+		System.out.format("A* (Manhattan Dist) duration = %3.5f s\n", (double) duration
 				/ (double) 1000000000);
 
 		/*
@@ -112,9 +113,17 @@ public class eightPuzzle {
 		solver.aStarSearch(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("A* (IncorrectTiles) duration = %3.5f s\n", (double) duration
+		System.out.format("A* (Double Manhattan Dist) duration = %3.5f s\n", (double) duration
 				/ (double) 1000000000);
 	
+		/*
+		 * 6. Iterative Deepening search, with testing for duplicate states.
+		 * "Consider making a breadth first search into an iterative deepening
+		 * search. This is carried out by having a depth-first searcher, which
+		 * searches only to a limited depth. It can first do a depth first search to
+		 * depth 1 by building paths of length 1 in a depth-first manner. Then d=2
+		 * and so on
+		 */
 
 		
 	}
@@ -132,7 +141,7 @@ public class eightPuzzle {
 		// holds future states to explore
 		Stack<Board> stack = new Stack<Board>();
 		if (DEBUG_MODE) 
-			System.out.format("h(n) (before) %d\n", b.calcHeuristic(goal));
+			System.out.println("h(n) (before) = " + b.calcHeuristic(goal));
 		while (!b.equals(goal)) {
 			observedNodes.add(b.toString());
 			stack.addAll(b.getSuccessors());
@@ -145,15 +154,13 @@ public class eightPuzzle {
 				count++;
 			}
 		}
-		if (DEBUG_MODE) 
-			System.out.format("h(n) (after) %d\n", b.calcHeuristic(goal));
 		System.out.println(observedNodes.size() + " nodes examined.");
 		if (observedNodes.size() < 10000)
 			printHistory(b);
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-
+		showCostFunction(b);
 	}
 
 	// begin additional search methods
@@ -170,8 +177,8 @@ public class eightPuzzle {
 		HashSet<String> observedNodes = new HashSet<String>();
 		// hold future states to explore in a FIFO queue
 		Vector<Board> nodeQueue = new Vector<Board>(); 
-		System.out.format("h(n) (before) %d\n", 
-				b.calcHeuristic(goal));
+		b.setHeuristicType(Board.HEURISTIC.INCORRECT_TILES);
+		System.out.println("h(n) (before) = " + b.calcHeuristic(goal));
 		while (!b.equals(goal)) {
 			observedNodes.add(b.toString());
 			// add successor nodes to the queue
@@ -191,13 +198,9 @@ public class eightPuzzle {
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		b.setHeuristicType(Board.HEURISTIC.INCORRECT_TILES);
-		if (DEBUG_MODE) {
-			System.out.format("h(n) (after) %d\n", b.calcHeuristic(goal));		if (DEBUG_MODE)
-			System.out.println("Final Board: " + b.toString());
-		}
+		showCostFunction(b);
 	}
-
+	
 	/*
 	 * 2. Best-first search using the heuristic function h = number of tiles
 	 * that are not in the correct place (not counting the blank).
@@ -239,10 +242,7 @@ public class eightPuzzle {
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		if (DEBUG_MODE){
-			System.out.println("h(n) (after) " + b.calcHeuristic(goal));
-			System.out.println("Final Board: \n " + b.toString());
-		}
+		showCostFunction(b);
 	}
 
 	/**
@@ -284,23 +284,11 @@ public class eightPuzzle {
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		if (DEBUG_MODE){
-			System.out.format("h(n) (after) %d\n", b.calcHeuristic(goal));
-			System.out.println("Final Board: \n " + b.toString());
-			System.out.println("A* h(n) after = " +
-					b.incorrectTilesHeuristic(goal) + " + " + b.getPathLength());
-			}
+		showCostFunction(b);
 	}
 
 	
-	/*
-	 * 6. Iterative Deepening search, with testing for duplicate states.
-	 * "Consider making a breadth first search into an iterative deepening
-	 * search. This is carried out by having a depth-first searcher, which
-	 * searches only to a limited depth. It can first do a depth first search to
-	 * depth 1 by building paths of length 1 in a depth-first manner. Then d=2
-	 * and so on
-	 */
+	
 
 	/*
 	 * Note that there should only be two basic search functions (depth-first
@@ -311,6 +299,20 @@ public class eightPuzzle {
 	 */
 
 	// end additional search methods
+	
+	/**
+	 * function prints path and heuristic costs for the solution
+	 * @param b
+	 */
+	private void showCostFunction(Board b){
+		if (DEBUG_MODE){
+			System.out.println("f(p) = c(p) + h(p) = " +
+					 b.getPathLength() + " + " + b.incorrectTilesHeuristic(goal));
+		}
+		if (VERBOSE_MODE){
+			System.out.println("Final Board: \n " + b.toString());
+		}
+	}
 
 	/*
 	 * This method prints the move history of the beginning state to the current
