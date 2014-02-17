@@ -17,16 +17,19 @@ public class Board implements Comparable<Board>
 {
 
 	private boolean VERBOSE_MODE = false;
-	private boolean DEBUG_mode = true;
+	private boolean DEBUG_MODE = true;
 	// the internal board representation
 	protected int[] board;
 	public enum HEURISTIC {
+		NONE,
 		CONSTANT, 
 		INCORRECT_TILES,
+		PATH_PLUS_INCORRECT,
 		MANHATTAN_DIST,
-		MANHATTAN_DBL
+		DBL_MANHATTAN
 	};
-	static HEURISTIC myHeuristic;
+	// myHeuristic is static so it will be a class variable - all instances should share it
+	private static HEURISTIC myHeuristic = HEURISTIC.NONE;
 
 	// constants for specifying move directions
 	public static final int UP = -3;
@@ -40,6 +43,15 @@ public class Board implements Comparable<Board>
 
 	// helps us keep track of how a solution was generated
 	protected Board parent;
+	// goal is static so all instances share it
+	protected static Board goal;
+	
+	public void setGoal(Board newGoal){
+		this.goal = newGoal;
+	}
+	public Board getGoal(){
+		return this.goal;
+	}
 
 	// keeps track of the estimated distance to the goal state
 	// (the f() function from the book)
@@ -121,8 +133,14 @@ public class Board implements Comparable<Board>
 		for (int i = 0; i < legalMoves.length; i++) {
 			Board successor = getSuccessor(legalMoves[i]);
 			// check if the move was legal
-			if (successor != null)
+			if (successor != null){
+				if (successor.getHeuristicType() != HEURISTIC.NONE){
+//					successor.setGoal(this.getGoal());
+//					successor.setHeuristicType(this.getHeuristicType());
+					successor.setCostEstimate(successor.calcHeuristic(goal));
+				}
 				res.addElement(successor);
+			}
 		}
 		return res;
 	}
@@ -159,6 +177,41 @@ public class Board implements Comparable<Board>
 		return (int) Math.floor(getBlankLocation() / 3);
 	}
 
+	/**
+	 * returns the location of a given tile represented by tileVal (0-8) within
+	 * the internal data structure
+	 * 
+	 * @param tileVal
+	 * @return the location of the tile in the internal data structure
+	 */
+	protected int getTileLocation(int tileVal){
+		if (tileLocationCache[tileVal] < 0){
+			int i = -1;
+			for (i = 0; i < board.length && board[i] != tileVal; i++){
+			}
+			tileLocationCache[tileVal] = i;
+		}
+		return tileLocationCache[tileVal];
+	}
+	private int[] tileLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	
+	/**
+	 * 
+	 * @param tileVal
+	 * @return the X coordinate of the location of the valued tile
+	 */
+	public int getTileLocationX(int tileVal){
+		return getTileLocation(tileVal) % 3;
+	}
+	/**
+	 * 
+	 * @param tileVal
+	 * @return the Y coordinate of the location of the valued tile
+	 */	
+	public int getTileLocationY(int tileVal){
+		return (int) Math.floor(getTileLocation(tileVal) / 3);
+	}
+	
 	/**
 	 * Returns the board that generated this one as a successor
 	 * 
@@ -273,20 +326,23 @@ public class Board implements Comparable<Board>
 		// Assume neither board is null
 		if (this == thatBoard){// optimization 
 			retVal = 0;
-		}else if (calcHeuristic(this) < calcHeuristic(thatBoard)){
+		}else if (getCostEstimate() < thatBoard.getCostEstimate()){
 			retVal = -1;
-		}else if (calcHeuristic(this) > calcHeuristic(thatBoard)) {
+		}else if (getCostEstimate() > thatBoard.getCostEstimate()) {
 			retVal = 1;
 		};
+		if (VERBOSE_MODE)
+			System.out.println("h(this) = " + calcHeuristic(this) + 
+					", h(that) = " + calcHeuristic(thatBoard));
 		return retVal;
 	}
 
-	public void setHeuristic(HEURISTIC newHeuristic){
+	public void setHeuristicType(HEURISTIC newHeuristic){
 		myHeuristic = newHeuristic;
 		return;
 	}
 
-	public HEURISTIC getHeuristic(){
+	public HEURISTIC getHeuristicType(){
 		if (VERBOSE_MODE) 
 			System.out.println("Using Heuristic " + myHeuristic);
 		return myHeuristic;
@@ -298,19 +354,31 @@ public class Board implements Comparable<Board>
 		case CONSTANT: 
 			heuristicValue = constantHeuristic();
 			break;
-		case INCORRECT_TILES: 
+		case INCORRECT_TILES:
+			// this is used for BestFS
 			heuristicValue = incorrectTilesHeuristic(goal);
 			break;
-		case MANHATTAN_DIST: 
-			heuristicValue = manhattanDistanceHeuristic(goal);
+		case PATH_PLUS_INCORRECT:
+			// this is only used for A* so add the path length to it
+			heuristicValue = incorrectTilesHeuristic(goal);
+			heuristicValue = getPathLength() + heuristicValue;
 			break;
-		case MANHATTAN_DBL:
+		case MANHATTAN_DIST: 
+			// this is only used for A* so add the path length to it
+			heuristicValue = manhattanDistanceHeuristic(goal);
+			heuristicValue = getPathLength() + heuristicValue;
+			break;
+		case DBL_MANHATTAN:
+			// this is only used for A* so add path length to it
 			heuristicValue = doubleManhattanHeuristic(goal);
+			heuristicValue = getPathLength() + heuristicValue;
 			break;
 		default :
 			heuristicValue = 0;
 		};
-
+		if(VERBOSE_MODE)
+			System.out.println("Using " + myHeuristic + 
+					" h(n)=" + heuristicValue);
 		return heuristicValue;
 	}
 
@@ -337,21 +405,36 @@ public class Board implements Comparable<Board>
 	}
 
 	/*
-	 * Heuristic 2 TODO h2(n) = the Manhattan heuristic function h = sum of
+	 * Heuristic 2 h2(n) = the Manhattan heuristic function h = sum of
 	 * Manhattan distances between all tiles and their correct positions.
 	 * (Manhattan distance is the sum of the x distance and y distance
 	 * magnitudes.)
 	 */
-	protected int manhattanDistanceHeuristic(Board board) {
-		return 0;
+	protected int manhattanDistanceHeuristic(Board thatBoard) {
+		int manDist=0;
+		int dx = 0;
+		int dy = 0;
+		for (int tileVal = 1; tileVal < 9; tileVal++) {
+			dx = Math.abs(getTileLocationX(tileVal) - thatBoard.getTileLocationX(tileVal));
+			dy = Math.abs(getTileLocationY(tileVal) - thatBoard.getTileLocationY(tileVal));
+			if (VERBOSE_MODE)
+				System.out.println("(V, this(x,y) , goal(x,y) ) = (" + tileVal 
+						+ ", " + getTileLocationX(tileVal)
+						+ "," + getTileLocationY(tileVal)
+						+ ", " + thatBoard.getTileLocationX(tileVal)
+						+ "," + thatBoard.getTileLocationY(tileVal)
+						+ ")");
+			manDist += (dx + dy);
+		}
+		return manDist;
 	}
 
 	/*
-	 * Heuristic 3 TODO: h3(n) = h2(n) * 2 heuristic function h = (sum of
+	 * Heuristic 3 h3(n) = h2(n) * 2 heuristic function h = (sum of
 	 * Manhattan distances) * 2
 	 */
 	protected int doubleManhattanHeuristic(Board board) {
-		return 0;
+		return ( manhattanDistanceHeuristic(board)*2 );
 	}
 
 

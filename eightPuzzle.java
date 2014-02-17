@@ -10,49 +10,23 @@ public class eightPuzzle {
 	static boolean DEBUG_MODE = true;
 	static boolean VERBOSE_MODE = false;
 	static Board goal;
-	//	Comparator<Board> boardComparator = new BoardComparator();
-	//    public enum HEURISTIC {
-	//    	CONSTANT, 
-	//    	INCORRECT_TILES,
-	//    	MANHATTAN_DIST,
-	//    	MANHATTAN_DBL
-	//    	};
-	//    static HEURISTIC myHeuristic = HEURISTIC.INCORRECT_TILES;
 
-	// BoardComparator.java
-	//	public class BoardComparator implements Comparator<Board>
-	//	{
-	//		// TODO implement a switch to use different heuristics and a getHeuristic method to use it
-	//	    @Override
-	//	    public int compare(Board board1, Board board2)
-	//	    {
-	//	    	int retVal = 0;
-	//	        // Assume neither board is null
-	//	        if (getHeuristic(board1) < getHeuristic(board2)){
-	//	            retVal = -1;
-	//	        }else if (getHeuristic(board1) > getHeuristic(board2)) {
-	//	            retVal = 1;
-	//	        };
-	//	        return retVal;
-	//	    }
-	//	}
 
 	public static void main(String[] args) {
 		goal = new Board(new int[] { 1, 2, 3, 8, 0, 4, 7, 6, 5 });
-
-		Board b = new Board(new int[] {1,3,4,8,6,2,7,0,5});//easy
-		// Board b = new Board(new int[] { 2, 8, 1, 0, 4, 3, 7, 6, 5 });// medium
-		// Board b = new Board(new int[] {2,8,1,4,6,3,0,7,5});//hard
-		// Board b = new Board(new int[] {5,6,7,4,0,8,3,2,1});//worst
-
-		b.setHeuristic(Board.HEURISTIC.INCORRECT_TILES);
 		long startTime, endTime, duration;
 
-		eightPuzzle solver = new eightPuzzle();
+//		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
+//		int[] array = {1,3,4,8,0,5,7,2,6};//less easy (d=6)
+//		int[] array = {2,8,1,0,4,3,7,6,5};// medium
+//		int[] array = {2,8,1,4,6,3,0,7,5};//hard
+		int[] array = {5,6,7,4,0,8,3,2,1};//worst
+		
+		Board b = new Board(array);
 
 		// DFS
+		eightPuzzle solver = new eightPuzzle();
 		System.out.println("===DFS===");
-		System.out.println("Current Heuristic = " + b.getHeuristic());
 		startTime = System.nanoTime();
 		solver.dfs(b);
 		endTime = System.nanoTime();
@@ -64,7 +38,6 @@ public class eightPuzzle {
 		System.out.println();
 		solver = new eightPuzzle();
 		System.out.println("===BFS===");
-		System.out.println("Current Heuristic = " + b.getHeuristic());
 		startTime = System.nanoTime();
 		solver.bfs(b);
 		endTime = System.nanoTime();
@@ -72,12 +45,16 @@ public class eightPuzzle {
 		System.out.format("BFS duration = %3.5f s\n", (double) duration
 				/ (double) 1000000000);
 
+		// following search methods need a goal and heuristics
+		
 		//BestFS
 		// use the incorrect tiles heuristic
+		b = new Board(array);//easy (d=5)
+		b.setGoal(goal);
+		b.setHeuristicType(Board.HEURISTIC.INCORRECT_TILES);
 		solver = new eightPuzzle();
 		System.out.println("===BestFS===");
-		b.setHeuristic(Board.HEURISTIC.INCORRECT_TILES);
-		System.out.println("Current Heuristic = " + b.getHeuristic());
+		System.out.println("Current Heuristic = " + b.getHeuristicType());
 		startTime = System.nanoTime();
 		solver.bestfs(b);
 		endTime = System.nanoTime();
@@ -85,8 +62,61 @@ public class eightPuzzle {
 		System.out.format("BestFS duration = %3.5f s\n", (double) duration
 				/ (double) 1000000000);
 
+		/*3. A* search using the heuristic function h = number of tiles that are
+		 * not in the correct place (not counting the blank).*/
+		//A* search, h(n)=PATH+PLUS_INCORRECT_TILES
+		b = new Board(array);//easy (d=5)
+		b.setGoal(goal);
+		b.setHeuristicType(Board.HEURISTIC.PATH_PLUS_INCORRECT);
+		solver = new eightPuzzle();
+		System.out.println("===A* (Incorrect Tiles)===");
+		System.out.println("Current Heuristic = " + b.getHeuristicType());
+		startTime = System.nanoTime();
+		solver.aStarSearch(b);
+		endTime = System.nanoTime();
+		duration = endTime - startTime;
+		System.out.format("A* (IncorrectTiles) duration = %3.5f s\n", (double) duration
+				/ (double) 1000000000);
+		
+		/*
+		 * 4. A* search using the Manhattan heuristic function h = sum of Manhattan
+		 * distances between all tiles and their correct positions. (Manhattan
+		 * distance is the sum of the x distance and y distance magnitudes.)
+		 */
+		//A* search, h(n)=MANHATTAN_DIST+PATH
+		b = new Board(array);//easy (d=5)
+		b.setGoal(goal);
+		solver = new eightPuzzle();
+		System.out.println("===A* (Manhattan Dist)===");
+		b.setHeuristicType(Board.HEURISTIC.MANHATTAN_DIST);
+		System.out.println("Current Heuristic = " + b.getHeuristicType());
+		startTime = System.nanoTime();
+		solver.aStarSearch(b);
+		endTime = System.nanoTime();
+		duration = endTime - startTime;
+		System.out.format("A* (IncorrectTiles) duration = %3.5f s\n", (double) duration
+				/ (double) 1000000000);
 
+		/*
+		 * 5. A* search using the heuristic function 
+		 * h = (sum of Manhattan distances) * 2.
+		 */
+		//A* search, h(n)=DBL_MANHATTAN_DIST
+		b = new Board(array);//easy (d=5)
+		b.setGoal(goal);
+		solver = new eightPuzzle();
+		System.out.println("===A* (Double Manhattan Dist)===");
+		b.setHeuristicType(Board.HEURISTIC.DBL_MANHATTAN);
+		System.out.println("Current Heuristic = " + b.getHeuristicType());
+		startTime = System.nanoTime();
+		solver.aStarSearch(b);
+		endTime = System.nanoTime();
+		duration = endTime - startTime;
+		System.out.format("A* (IncorrectTiles) duration = %3.5f s\n", (double) duration
+				/ (double) 1000000000);
+	
 
+		
 	}
 
 	/*
@@ -161,7 +191,7 @@ public class eightPuzzle {
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		b.setHeuristic(Board.HEURISTIC.INCORRECT_TILES);
+		b.setHeuristicType(Board.HEURISTIC.INCORRECT_TILES);
 		if (DEBUG_MODE) {
 			System.out.format("h(n) (after) %d\n", b.calcHeuristic(goal));		if (DEBUG_MODE)
 			System.out.println("Final Board: " + b.toString());
@@ -184,9 +214,56 @@ public class eightPuzzle {
 		// hold future states to explore in a priority queue
 		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100);
 
-		//		Vector<Board> nodeQueue = new Vector<Board>(); 
-		System.out.format("h(n) (before) %d\n", 
-				b.calcHeuristic(goal));
+		// set the cost estimate for b based on the current heuristic
+		int h = b.calcHeuristic(goal);
+		b.setCostEstimate(h);
+
+		System.out.println("h(n) (before) " + h);
+		System.out.println(b.toString());
+		while (!b.equals(goal)) {
+			observedNodes.add(b.toString());
+			// add successor nodes to the queue
+			boardPriorityQueue.addAll(b.getSuccessors());
+			b = boardPriorityQueue.remove();
+			while (observedNodes.contains(b.toString())) {
+				b = boardPriorityQueue.remove();
+			}
+			if (count < 15) {
+				first15states += b + "\n";
+				count++;
+			}
+		}
+		System.out.println(observedNodes.size() + " nodes examined.");
+		if (observedNodes.size() < 10000)
+			printHistory(b);
+		else
+			System.out.println("Not printing history--leads to stack overflow");
+		System.out.println(first15states);
+		if (DEBUG_MODE){
+			System.out.println("h(n) (after) " + b.calcHeuristic(goal));
+			System.out.println("Final Board: \n " + b.toString());
+		}
+	}
+
+	/**
+	 * A* is implemented by treating the frontier as a priority queue
+	 * ordered by f(p)=c(p)+h2(n)
+	 * 
+	 * @param b
+	 */
+	public void aStarSearch(Board b) {
+		int count = 0;// used to output the first 15 nodes visited
+		String first15states = "";
+		// keeps track of visited states
+		HashSet<String> observedNodes = new HashSet<String>();
+		// hold future states to explore in a priority queue
+		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100);
+		// set the cost estimate for b based on the current heuristic
+		int h = b.calcHeuristic(goal);
+		b.setCostEstimate(h);
+
+		System.out.println("Using heuristic: " + b.getHeuristicType());
+		System.out.println("h(n) (before) " + h);
 		System.out.println(b.toString());
 		while (!b.equals(goal)) {
 			observedNodes.add(b.toString());
@@ -210,33 +287,12 @@ public class eightPuzzle {
 		if (DEBUG_MODE){
 			System.out.format("h(n) (after) %d\n", b.calcHeuristic(goal));
 			System.out.println("Final Board: \n " + b.toString());
-		}
+			System.out.println("A* h(n) after = " +
+					b.incorrectTilesHeuristic(goal) + " + " + b.getPathLength());
+			}
 	}
 
-	/*
-	 * 3. A* search using the heuristic function h = number of tiles that are
-	 * not in the correct place (not counting the blank).
-	 * 
-	 * TODO A* is implemented as a depth first search where the node to
-	 */
-
-	/*
-	 * 4. A* search using the Manhattan heuristic function h = sum of Manhattan
-	 * distances between all tiles and their correct positions. (Manhattan
-	 * distance is the sum of the x distance and y distance magnitudes.)
-	 * 
-	 * TODO: A* is implemented by treating the frontier as a priority queue
-	 * ordered by f(p)=c(p)+h2(n)
-	 */
-
-	/*
-	 * 5. A* search using the heuristic function h = (sum of Manhattan
-	 * distances) * 2.
-	 * 
-	 * TODO: A* is implemented by treating the frontier as a priority queue
-	 * ordered by f(p)=c(p)+h3(n)
-	 */
-
+	
 	/*
 	 * 6. Iterative Deepening search, with testing for duplicate states.
 	 * "Consider making a breadth first search into an iterative deepening
@@ -245,74 +301,6 @@ public class eightPuzzle {
 	 * depth 1 by building paths of length 1 in a depth-first manner. Then d=2
 	 * and so on
 	 */
-
-	// Priority queue based on heuristic value
-
-	// method determines the heuristic value based on the global heuristic type 
-	//	protected int getHeuristic(Board board){
-	//		int heuristicValue = 0;
-	//		switch (myHeuristic) {
-	//		case CONSTANT: 
-	//			heuristicValue = constantHeuristic(board);
-	//			break;
-	//		case INCORRECT_TILES: 
-	//			heuristicValue = incorrectTilesHeuristic(board);
-	//			break;
-	//		case MANHATTAN_DIST: 
-	//			heuristicValue = manhattanDistanceHeuristic(board);
-	//			break;
-	//		case MANHATTAN_DBL:
-	//			heuristicValue = doubleManhattanHeuristic(board);
-	//			break;
-	//		default :
-	//			heuristicValue = 0;
-	//	    };
-	//	    if(VERBOSE_MODE)
-	//	    	System.out.println("Using Heuristic " + myHeuristic + 
-	//	    			",  = " + heuristicValue);
-	//
-	//		return heuristicValue;
-	//	}
-
-	//	/*
-	//	 * Heuristic 0 h0(n) = 0 simple heuristic that provides a constant output
-	//	 * value for heuristics so algorithms can emulate their base cases
-	//	 */
-	//	protected int constantHeuristic(Board board) {
-	//		return 1;
-	//	}
-	//
-	//	/*
-	//	 * Heuristic 1 h1(n) = number of tiles that are not in the correct place
-	//	 */
-	//	protected int incorrectTilesHeuristic(Board board) {
-	//		int count = 0;
-	//		for (int x = 0; x < 3; x++) {
-	//			for (int y = 0; y < 3; y++) {
-	//				if (board.getTileAt(x, y) != goal.getTileAt(x, y))
-	//					count++;
-	//			}
-	//		}
-	//		return count;
-	//	}
-	//
-	//	/*
-	//	 * Heuristic 2 TODO h2(n) = the Manhattan heuristic function h = sum of
-	//	 * Manhattan distances between all tiles and their correct positions.
-	//	 * (Manhattan distance is the sum of the x distance and y distance
-	//	 * magnitudes.)
-	//	 */
-	//	protected int manhattanDistanceHeuristic(Board board) {
-	//		return 0;
-	//	}
-	//
-	//	/*
-	//	 * Heuristic 3 TODO: h3(n) = h2(n) * 2 heuristic function h = (sum of
-	//	 * Manhattan distances) * 2
-	//	 */
-	//	protected int doubleManhattanHeuristic(Board board) {
-	//		return 0;
-	//	}
 
 	/*
 	 * Note that there should only be two basic search functions (depth-first
