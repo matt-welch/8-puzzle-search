@@ -1,7 +1,6 @@
 import java.util.HashSet;
 import java.util.Stack;
 import java.util.Vector;
-import java.util.Comparator;
 import java.util.PriorityQueue;
 //import java.util.Queue;
 //import java.util.LinkedList;
@@ -16,18 +15,19 @@ public class eightPuzzle {
 		goal = new Board(new int[] { 1, 2, 3, 8, 0, 4, 7, 6, 5 });
 		long startTime, endTime, duration;
 
-//		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
+		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
 //		int[] array = {1,3,4,8,0,5,7,2,6};//less easy (d=6)
 //		int[] array = {2,8,1,0,4,3,7,6,5};// medium
 //		int[] array = {2,8,1,4,6,3,0,7,5};//hard
-		int[] array = {5,6,7,4,0,8,3,2,1};//worst
+//		int[] array = {5,6,7,4,0,8,3,2,1};//worst
 		
 		Board b = new Board(array);
 //		b = Board.randomBoard();
 		b.setGoal(goal);
-
+		eightPuzzle solver = null;
+		
 		// DFS
-		eightPuzzle solver = new eightPuzzle();
+		solver = new eightPuzzle();
 		System.out.println("===DFS===");
 		startTime = System.nanoTime();
 		solver.dfs(b);
@@ -103,7 +103,7 @@ public class eightPuzzle {
 		 * h = (sum of Manhattan distances) * 2.
 		 */
 		//A* search, h(n)=DBL_MANHATTAN_DIST
-		b = new Board(array);//easy (d=5)
+		b = new Board(array);
 		b.setGoal(goal);
 		solver = new eightPuzzle();
 		System.out.println("===A* (Double Manhattan Dist)===");
@@ -124,8 +124,17 @@ public class eightPuzzle {
 		 * depth 1 by building paths of length 1 in a depth-first manner. Then d=2
 		 * and so on
 		 */
-
-		
+		b = new Board(array);
+		b.setGoal(goal);
+		solver = new eightPuzzle();
+		System.out.println("===Iterative Deepening===");
+		b.setHeuristicType(Board.HEURISTIC.NONE);
+		startTime = System.nanoTime();
+		solver.iterativeDeepening(b);
+		endTime = System.nanoTime();
+		duration = endTime - startTime;
+		System.out.format("Iterative Deepening duration = %3.5f s\n", (double) duration
+				/ (double) 1000000000);
 	}
 
 	/*
@@ -175,22 +184,30 @@ public class eightPuzzle {
 		String first15states = "";
 		// keeps track of visited states
 		HashSet<String> observedNodes = new HashSet<String>();
-		// hold future states to explore in a FIFO queue
+		// vector acting as a FIFO queue to hold future states to explore 
+		// 	since vector.remove(0): Removes the element at the specified position 
+		// 	in this Vector. Shifts any subsequent elements to the left (subtracts 
+		//	one from their indices). Returns the element that was removed from the Vector. 
 		Vector<Board> nodeQueue = new Vector<Board>(); 
-		b.setHeuristicType(Board.HEURISTIC.INCORRECT_TILES);
-		System.out.println("h(n) (before) = " + b.calcHeuristic(goal));
-		while (!b.equals(goal)) {
-			observedNodes.add(b.toString());
-			// add successor nodes to the queue
-			nodeQueue.addAll(b.getSuccessors());
-			b = nodeQueue.remove(0);
-			while (observedNodes.contains(b.toString())) {
+		if (DEBUG_MODE){
+			b.setHeuristicType(Board.HEURISTIC.INCORRECT_TILES);
+			System.out.println("h(n) (before) = " + b.calcHeuristic(goal));			
+		}
+		while (!b.equals(goal)) {// check if b=goal
+			observedNodes.add(b.toString()); // add b to list of observed nodes
+			nodeQueue.addAll(b.getSuccessors()); // add successor nodes to the end of the queue
+			b = nodeQueue.remove(0); // remove the first successor node from the queue to be examined
+
+			// skip over nodes that have been visited before
+			while (!b.equals(goal) && observedNodes.contains(b.toString())) { 
 				b = nodeQueue.remove(0);
 			}
+			// record the node if less than 15
 			if (count < 15) {
 				first15states += b + "\n";
 				count++;
 			}
+			// now loop to check if the current node is goal and add its successors to end of queue
 		}
 		System.out.println(observedNodes.size() + " nodes examined.");
 		if (observedNodes.size() < 10000)
@@ -286,8 +303,81 @@ public class eightPuzzle {
 		System.out.println(first15states);
 		showCostFunction(b);
 	}
-
+	/*
+	 * This method implements Iterative Deepeningsearch on the 8 puzzle, keeping
+	 * track of visited nodes to avoid infinite search. Iterative DDeepening is a 
+	 * modification of depth first search where the DFS is repeated at increasing 
+	 * depth bounds, beginning with the root each time.  
+	 * This method also outputs the first 15 nodes visited.
+	 */
+	public void iterativeDeepening(Board b) {
+		int depthBound = 0;
+		final int maxDepth = 50;
+		boolean goalFound = false;
+		while (!goalFound && depthBound < maxDepth){
+			goalFound = boundedDFS(b, depthBound);
+			depthBound++;
+		}
+		if (goalFound)
+			System.out.println("Iterative deepening finished successfully in " + depthBound + " rounds.");
+		else
+			System.out.println("Iterative deepening terminated in " + depthBound + " rounds.");
+	}
 	
+	public boolean boundedDFS(Board b, int depthBound){
+		boolean goalFound = false;
+		boolean notAtBound = true;
+		int pathLength = 0;
+		int count = 0;// used to output the first 15 nodes visited
+		String first15states = "";
+		// keeps track of visited states
+		HashSet<String> observedNodes = new HashSet<String>();
+		// holds future states to explore
+		Stack<Board> stack = new Stack<Board>();
+
+		while (!b.equals(goal)) {
+			observedNodes.add(b.toString());
+			if(pathLength < depthBound){
+				stack.addAll(b.getSuccessors());
+			}
+			if(stack.isEmpty()){
+				goalFound=false;
+				break;
+			}
+			b = stack.pop();
+
+			while (observedNodes.contains(b.toString()) && !stack.isEmpty()) {
+				b = stack.pop();
+			}
+			if (count < 15) {
+				first15states += b + "\n";
+				count++;
+			}
+
+//			if (DEBUG_MODE){
+//				System.out.println("b.pathlength = " + b.getPathLength());
+//				System.out.println("depth = " + depth);
+//			}
+			pathLength = b.getPathLength();
+		}
+	
+		if (pathLength <= depthBound){
+			// terminate "unnaturally"
+			goalFound = false;
+		}else{
+			// terminate naturally
+			goalFound = true;
+			System.out.println(observedNodes.size() + " nodes examined.");
+			if (observedNodes.size() < 10000)
+				printHistory(b);
+			else
+				System.out.println("Not printing history--leads to stack overflow");
+			System.out.println(first15states);
+			showCostFunction(b);
+
+		}
+		return goalFound;
+	}
 	
 
 	/*

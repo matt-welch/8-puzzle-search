@@ -16,8 +16,8 @@ import java.util.Vector;
 public class Board implements Comparable<Board>
 {
 
-	private boolean VERBOSE_MODE = false;
-	private boolean DEBUG_MODE = true;
+	static private boolean VERBOSE_MODE = false;
+	static private boolean DEBUG_MODE = true;
 	// the internal board representation
 	protected int[] board;
 	public enum HEURISTIC {
