@@ -19,17 +19,18 @@ public class eightPuzzle
 	};
 	static HEURISTIC currentHeuristic;
 	public long heuristicTime = 0;
-	
+	Comparator<Board> boardComparator = new BoardComparator();
+
 	// BoardComparator.java
 	public class BoardComparator implements Comparator<Board>
 	{
-		// TODO implement a switch to use different heuristics and a getHeuristic method to use it
 		@Override
 		public int compare(Board board1, Board board2)
 		{
 			int retVal = 0;
-			// TODO need to setCostEstimate here for each board
-			
+			// set Cost Estimate here for each board
+			board1.setCostEstimate(calcCostEstimate(board1));
+			board2.setCostEstimate(calcCostEstimate(board2));
 			if (board1 == board2){// optimization 
 				retVal = 0;
 			}else if (board1.getCostEstimate() < board2.getCostEstimate()){
@@ -177,10 +178,9 @@ public class eightPuzzle
 	public HEURISTIC getHeuristicType(){
 		return currentHeuristic;
 	}
-	public int calcHeuristic(Board b){
+	public int calcCostEstimate(Board b){
 		long startTime = System.nanoTime();
 		int heuristicValue = 0;
-		
 		switch (currentHeuristic) {
 		case CONSTANT: 
 			heuristicValue = constantHeuristic();
@@ -211,11 +211,20 @@ public class eightPuzzle
 			System.out.println("Using " + currentHeuristic + 
 					" h(n)=" + heuristicValue);
 		long endTime = System.nanoTime();
-		// accumulate time spent int he heuristic function
+		// accumulate time spent in the heuristic function
 		heuristicTime += (endTime - startTime);
 		return heuristicValue;
 	}
 	
+	/**
+	 * Function returns the total time spent in the heuristic function so far
+	 * @return heuristicTime
+	 */
+	public long getHeuristicTime(){
+		return heuristicTime;
+	}
+	
+
 	/*
 	 * Heuristic 0 h0(n) = 0 simple heuristic that provides a constant output
 	 * value for heuristics so algorithms can emulate their base cases
@@ -248,6 +257,9 @@ public class eightPuzzle
 		int manDist=0;
 		int dx = 0;
 		int dy = 0;
+		// TODO implement the manhattan distance function
+		// can't store data tile positions in teh Board class so need another method for 
+		// storing tile positions
 //		for (int tileVal = 1; tileVal < 9; tileVal++) {
 //			dx = Math.abs(getTileLocationX(tileVal) - thatBoard.getTileLocationX(tileVal));
 //			dy = Math.abs(getTileLocationY(tileVal) - thatBoard.getTileLocationY(tileVal));
