@@ -48,10 +48,14 @@ public class eightPuzzle
 		goal = new Board(new int[] {1,2,3,8,0,4,7,6,5});
 		long startTime, endTime, duration;
 		
-		Board b = new Board(new int[] {1,3,4,8,6,2,7,0,5});//easy
-		//Board b = new Board(new int[] {2,8,1,0,4,3,7,6,5});//medium
-		//Board b = new Board(new int[] {2,8,1,4,6,3,0,7,5});//hard
-		//Board b = new Board(new int[] {5,6,7,4,0,8,3,2,1});//worst
+//		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
+//		int[] array = {1,3,4,8,0,5,7,2,6};//less easy (d=6)
+		int[] array = {2,8,1,0,4,3,7,6,5};// medium
+//		int[] array = {2,8,1,4,6,3,0,7,5};//hard
+//		int[] array = {5,6,7,4,0,8,3,2,1};//worst
+		
+		Board b = new Board(array);
+//		b = Board.randomBoard();
 		
 		// DFS
 		eightPuzzle solver = new eightPuzzle();
@@ -72,6 +76,92 @@ public class eightPuzzle
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
 		System.out.format("BFS duration = %3.5f s\n", (double) duration
+				/ (double) 1000000000);
+		
+		// following search methods need a goal and heuristics
+		
+//		//BestFS
+//		// use the incorrect tiles heuristic
+//		b = new Board(array);//easy (d=5)
+//		setHeuristicType(HEURISTIC.INCORRECT_TILES);
+//		solver = new eightPuzzle();
+//		System.out.println("===BestFS===");
+//		System.out.println("Current Heuristic = " + getHeuristicType());
+//		startTime = System.nanoTime();
+//		solver.bestfs(b);
+//		endTime = System.nanoTime();
+//		duration = endTime - startTime;
+//		System.out.format("BestFS duration = %3.5f s\n", (double) duration
+//				/ (double) 1000000000);
+//
+//		/*3. A* search using the heuristic function h = number of tiles that are
+//		 * not in the correct place (not counting the blank).*/
+//		//A* search, h(n)=PATH+PLUS_INCORRECT_TILES
+//		b = new Board(array);//easy (d=5)
+//		setHeuristicType(HEURISTIC.PATH_PLUS_INCORRECT);
+//		solver = new eightPuzzle();
+//		System.out.println("===A* (Incorrect Tiles)===");
+//		System.out.println("Current Heuristic = " + getHeuristicType());
+//		startTime = System.nanoTime();
+//		solver.aStarSearch(b);
+//		endTime = System.nanoTime();
+//		duration = endTime - startTime;
+//		System.out.format("A* (IncorrectTiles) duration = %3.5f s\n", (double) duration
+//				/ (double) 1000000000);
+//		
+//		/*
+//		 * 4. A* search using the Manhattan heuristic function h = sum of Manhattan
+//		 * distances between all tiles and their correct positions. (Manhattan
+//		 * distance is the sum of the x distance and y distance magnitudes.)
+//		 */
+//		//A* search, h(n)=MANHATTAN_DIST+PATH
+//		// TODO Manhattan distance does not work so this will not operate correctly
+//		b = new Board(array);//easy (d=5)
+//		solver = new eightPuzzle();
+//		System.out.println("===A* (Manhattan Dist)===");
+//		setHeuristicType(HEURISTIC.MANHATTAN_DIST);
+//		System.out.println("Current Heuristic = " + getHeuristicType());
+//		startTime = System.nanoTime();
+//		solver.aStarSearch(b);
+//		endTime = System.nanoTime();
+//		duration = endTime - startTime;
+//		System.out.format("A* (Manhattan Dist) duration = %3.5f s\n", (double) duration
+//				/ (double) 1000000000);
+//
+//		/*
+//		 * 5. A* search using the heuristic function 
+//		 * h = (sum of Manhattan distances) * 2.
+//		 */
+//		//A* search, h(n)=DBL_MANHATTAN_DIST
+//		b = new Board(array);
+//		solver = new eightPuzzle();
+//		System.out.println("===A* (Double Manhattan Dist)===");
+//		setHeuristicType(HEURISTIC.DBL_MANHATTAN);
+//		System.out.println("Current Heuristic = " + getHeuristicType());
+//		startTime = System.nanoTime();
+//		solver.aStarSearch(b);
+//		endTime = System.nanoTime();
+//		duration = endTime - startTime;
+//		System.out.format("A* (Double Manhattan Dist) duration = %3.5f s\n", (double) duration
+//				/ (double) 1000000000);
+//	
+		/*
+		 * 6. Iterative Deepening search, with testing for duplicate states.
+		 * "Consider making a breadth first search into an iterative deepening
+		 * search. This is carried out by having a depth-first searcher, which
+		 * searches only to a limited depth. It can first do a depth first search to
+		 * depth 1 by building paths of length 1 in a depth-first manner. Then d=2
+		 * and so on
+		 */
+		b = new Board(array);
+		solver = new eightPuzzle();
+		System.out.println("===Iterative Deepening===");
+		setHeuristicType(HEURISTIC.NONE);
+		startTime = System.nanoTime();
+		solver.iterativeDeepening(b);
+		endTime = System.nanoTime();
+		duration = endTime - startTime;
+		System.out.format("Iterative Deepening duration = %3.5f s\n", (double) duration
 				/ (double) 1000000000);
 		
 	}
@@ -264,10 +354,7 @@ public class eightPuzzle
 			if (VERBOSE_MODE)
 				System.out.println("Searching at depthBound = " + depthBound);
 			goalFound = boundedDFS(b, depthBound);
-//			if (VERBOSE_MODE)
-//				System.out.println("Current state: \n" + b);
-//			// reset the search history - Unnecessary??
-//			b = root;
+
 		}
 		if (goalFound)
 			System.out.println("Iterative deepening finished successfully in " + depthBound + " rounds.");
@@ -345,12 +432,12 @@ public class eightPuzzle
 			System.out.println("Final Board: \n " + b.toString());
 		}
 	}
-	public void setHeuristicType(HEURISTIC newHeuristic){
+	public static void setHeuristicType(HEURISTIC newHeuristic){
 		currentHeuristic = newHeuristic;
 		return;
 	}
 
-	public HEURISTIC getHeuristicType(){
+	public static HEURISTIC getHeuristicType(){
 		return currentHeuristic;
 	}
 	public int calcCostEstimate(Board b){
