@@ -47,7 +47,6 @@ public class eightPuzzle
 			};
 			return retVal;
 		}		
-		
 	}
 	
 	public static void main(String[] args)
@@ -56,35 +55,36 @@ public class eightPuzzle
 		buildGoalLocationCache();
 		long startTime, endTime, duration;
 		
-		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
-//		int[] array = {1,3,4,8,0,5,7,2,6};//less easy (d=6)
+//		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
 //		int[] array = {2,8,1,0,4,3,7,6,5};// medium
 //		int[] array = {2,8,1,4,6,3,0,7,5};//hard
-//		int[] array = {5,6,7,4,0,8,3,2,1};//worst
+		int[] array = {5,6,7,4,8,0,3,2,1};//worst
 		
 		Board b = new Board(array);
 //		b = Board.randomBoard();
-		
+		System.out.println("Searching on board: \n" + b.toString());
+		System.out.println("Searching for goal: \n" + goal.toString());
+
+		eightPuzzle solver;
 		
 		// DFS
-		eightPuzzle solver = new eightPuzzle();
+		solver = new eightPuzzle();
 		System.out.println("===DFS===");
 		startTime = System.nanoTime();
 		solver.dfs(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("DFS duration = %3.8f s\n", (double) duration
+		System.out.format("DFS duration = %3.8f s\n\n", (double) duration
 				/ (double) 1000000000);
 		
 		// BFS
-		System.out.println();
 		solver = new eightPuzzle();
-		System.out.println("===BFS===");
+		System.out.println("===BFS (#1)===");
 		startTime = System.nanoTime();
 		solver.bfs(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("BFS duration = %3.8f s\n", (double) duration
+		System.out.format("BFS duration = %3.8f s\n\n", (double) duration
 				/ (double) 1000000000);
 		
 		// following search methods need a goal and heuristics
@@ -92,30 +92,28 @@ public class eightPuzzle
 		//BestFS
 		// use the incorrect tiles heuristic
 		b = new Board(array);//easy (d=5)
-		setHeuristicType(HEURISTIC.INCORRECT_TILES);
 		solver = new eightPuzzle();
-		System.out.println("===BestFS===");
-		System.out.println("Current Heuristic = " + getHeuristicType());
+		System.out.println("===BestFS (#2)===");
+		setHeuristicType(HEURISTIC.INCORRECT_TILES);
 		startTime = System.nanoTime();
 		solver.bestfs(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("BestFS duration = %3.8f s\n", (double) duration
+		System.out.format("BestFS duration = %3.8f s\n\n", (double) duration
 				/ (double) 1000000000);
 		
 		/*3. A* search using the heuristic function h = number of tiles that are
 		 * not in the correct place (not counting the blank).*/
 		//A* search, h(n)=PATH+PLUS_INCORRECT_TILES
 		b = new Board(array);//easy (d=5)
-		setHeuristicType(HEURISTIC.PATH_PLUS_INCORRECT);
 		solver = new eightPuzzle();
-		System.out.println("===A* (Incorrect Tiles)===");
-		System.out.println("Current Heuristic = " + getHeuristicType());
+		System.out.println("===A* (Incorrect Tiles) (#3)===");
+		setHeuristicType(HEURISTIC.PATH_PLUS_INCORRECT);
 		startTime = System.nanoTime();
 		solver.aStarSearch(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("A* (IncorrectTiles) duration = %3.8f s\n", (double) duration
+		System.out.format("A* (IncorrectTiles) duration = %3.8f s\n\n", (double) duration
 				/ (double) 1000000000);
 		
 		/*
@@ -124,35 +122,32 @@ public class eightPuzzle
 		 * distance is the sum of the x distance and y distance magnitudes.)
 		 */
 		//A* search, h(n)=MANHATTAN_DIST+PATH
-		// TODO Manhattan distance does not work so this will not operate correctly
 		b = new Board(array);//easy (d=5)
 		solver = new eightPuzzle();
 		System.out.println("===A* (Manhattan Dist)===");
 		setHeuristicType(HEURISTIC.MANHATTAN_DIST);
-		System.out.println("Current Heuristic = " + getHeuristicType());
 		startTime = System.nanoTime();
 		solver.aStarSearch(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("A* (Manhattan Dist) duration = %3.5f s\n", (double) duration
+		System.out.format("A* (Manhattan Dist) duration = %3.5f s\n\n", (double) duration
 				/ (double) 1000000000);
 
-//		/*
-//		 * 5. A* search using the heuristic function 
-//		 * h = (sum of Manhattan distances) * 2.
-//		 */
-//		//A* search, h(n)=DBL_MANHATTAN_DIST
-//		b = new Board(array);
-//		solver = new eightPuzzle();
-//		System.out.println("===A* (Double Manhattan Dist)===");
-//		setHeuristicType(HEURISTIC.DBL_MANHATTAN);
-//		System.out.println("Current Heuristic = " + getHeuristicType());
-//		startTime = System.nanoTime();
-//		solver.aStarSearch(b);
-//		endTime = System.nanoTime();
-//		duration = endTime - startTime;
-//		System.out.format("A* (Double Manhattan Dist) duration = %3.5f s\n", (double) duration
-//				/ (double) 1000000000);
+		/*
+		 * 5. A* search using the heuristic function 
+		 * h = (sum of Manhattan distances) * 2.
+		 */
+		//A* search, h(n)=DBL_MANHATTAN_DIST
+		b = new Board(array);
+		solver = new eightPuzzle();
+		System.out.println("===A* (Double Manhattan Dist)===");
+		setHeuristicType(HEURISTIC.DBL_MANHATTAN);
+		startTime = System.nanoTime();
+		solver.aStarSearch(b);
+		endTime = System.nanoTime();
+		duration = endTime - startTime;
+		System.out.format("A* (Double Manhattan Dist) duration = %3.5f s\n\n", (double) duration
+				/ (double) 1000000000);
 	
 		/*
 		 * 6. Iterative Deepening search, with testing for duplicate states.
@@ -170,9 +165,8 @@ public class eightPuzzle
 		solver.iterativeDeepening(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("Iterative Deepening duration = %3.8f s\n", (double) duration
+		System.out.format("Iterative Deepening duration = %3.8f s\n\n", (double) duration
 				/ (double) 1000000000);
-		
 	}
 	
 	
@@ -206,12 +200,13 @@ public class eightPuzzle
 			}
 		}
 		System.out.println(observedNodes.size() + " nodes examined.");
-		if(observedNodes.size() < 10000)
+		if(observedNodes.size() < 10000){
 			printHistory(b);
+			showCostFunction(b, observedNodes);
+		}
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		showCostFunction(b);
 	}
 	
 	// begin additional search methods
@@ -255,7 +250,7 @@ public class eightPuzzle
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		showCostFunction(b);
+		showCostFunction(b, observedNodes);
 	}
 
 	
@@ -280,8 +275,7 @@ public class eightPuzzle
 		int h = calcCostEstimate(b);
 		b.setCostEstimate(h);
 
-		System.out.println("h(n) (before) " + h);
-		System.out.println(b.toString());
+		System.out.println("h(n) (init) " + h);
 		while (!b.equals(goal)) {
 			observedNodes.add(b.toString());
 			// add successor nodes to the queue
@@ -301,7 +295,7 @@ public class eightPuzzle
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		showCostFunction(b);
+		showCostFunction(b, observedNodes);
 	}
 
 	/**
@@ -323,8 +317,7 @@ public class eightPuzzle
 		b.setCostEstimate(h);
 
 		System.out.println("Using heuristic: " + getHeuristicType());
-		System.out.println("h(n) (before) " + h);
-		System.out.println(b.toString());
+		System.out.println("h(n) (init) " + h);
 		while (!b.equals(goal)) {
 			observedNodes.add(b.toString());
 			// add successor nodes to the queue
@@ -344,7 +337,7 @@ public class eightPuzzle
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		showCostFunction(b);
+		showCostFunction(b, observedNodes);
 	}
 	/*
 	 * This method implements Iterative Deepening search on the 8 puzzle, keeping
@@ -428,7 +421,7 @@ public class eightPuzzle
 			else
 				System.out.println("Not printing history--leads to stack overflow");
 			System.out.println(first15states);
-			showCostFunction(b);
+			showCostFunction(b, observedNodes);
 		}
 		return goalFound;
 	}
@@ -438,10 +431,14 @@ public class eightPuzzle
 	 * function prints path and heuristic costs for the solution
 	 * @param b
 	 */
-	static private void showCostFunction(Board b){
+	static private void showCostFunction(Board b, HashSet observedNodes){
 		System.out.println("c(p) = " + b.getPathLength() );
-		System.out.format("Total heuristic time = %3.8f s\n", (double) getHeuristicTime()
-				/ (double) 1000000000);
+		if (currentHeuristic != null && currentHeuristic != HEURISTIC.NONE){
+			double hTime = (double) getHeuristicTime() / (double) 1000000000;
+			System.out.format("Total heuristic time    = %3.8f s\n", hTime);
+			System.out.format("Heuristic Time per node = %3.8f ms\n",  
+					( (hTime / observedNodes.size() ) * 1000) );
+		}
 		if (VERBOSE_MODE){
 			System.out.println("Final Board: \n " + b.toString());
 		}
@@ -517,12 +514,23 @@ public class eightPuzzle
 	 */
 	protected int incorrectTilesHeuristic(Board b) {
 		int count = 0;
-		for (int x = 0; x < 3; x++) {
-			for (int y = 0; y < 3; y++) {
-				if (b.getTileAt(x, y) != goal.getTileAt(x, y))
-					count++;
+		int bTile=-1,goalTile=-1;
+		
+		for (int i=0;i<9;i++){
+			bTile = b.board[i];
+			goalTile = goal.board[i];
+			if( (bTile != goalTile)){
+				count++;
 			}
 		}
+		
+//		for (int x = 0; x < 3; x++) {
+//			for (int y = 0; y < 3; y++) {
+//				if (b.getTileAt(x, y) != goal.getTileAt(x, y))
+//					count++;
+//			}
+//		}
+		// offset count by 1 to account for 0
 		return count;
 	}
 
@@ -531,13 +539,13 @@ public class eightPuzzle
 	 * Manhattan distances between all tiles and their correct positions.
 	 * (Manhattan distance is the sum of the x distance and y distance
 	 * magnitudes.)  
-	 * Algorithm builds a location cache in linear time then getermines the x and y coordinates for 
+	 * Algorithm builds a location cache in linear time then determines the x and y coordinates for 
 	 * each position in linear time so algorithm is O(n) 
 	 */
 
+	// build goal location cache in linear time - placed in a function 
+	// so it's only performed once
 	static protected void buildGoalLocationCache(){
-		// build goal location cache in linear time - placed in a function 
-		// so it's only performed once
 		for (int index = 0; index < 9; index++) {
 			// get the tile value at the index (0..8) and set the location 
 			// cache at that tile value to the index
@@ -547,9 +555,6 @@ public class eightPuzzle
 			goalLocationCacheX[tileValue] =  eightPuzzle.getTileLocationX(goalLocationCache[tileValue]);
 			goalLocationCacheY[tileValue] =  eightPuzzle.getTileLocationY(goalLocationCache[tileValue]);	
 		}		
-		if(VERBOSE_MODE){
-			System.out.println("Goal Location Cache: " + goalLocationCache);
-		}
 	}
 
 	protected int manhattanDistanceHeuristic(Board b) {
@@ -558,13 +563,11 @@ public class eightPuzzle
 		int dy = 0;
 		// linear array representing the tiles from 0 to 8
 		int[] bLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
-//		int[] goalLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
 		
 		// build location caches in linear time
 		for (int index = 0; index < 9; index++) {
 			// get the tile value at the index (0..8) and set the location cache at that tile value to the index
 			bLocationCache[b.board[index]] = index;
-//			goalLocationCache[goal.board[index]] = index; // optimize this to a global variable - no need to recalculate
 		}
 		// for each tile value, get the location and determine the X & Y coordinate, then the difference
 		// ignore the blank tile because it gets moved passively and will be in place when all others are in place
@@ -583,8 +586,10 @@ public class eightPuzzle
 		}
 		return manDist;
 	}
-
-	// TODO, START HEREvopening the boar.modified broke the Board class - recreate the project??
+	// functions to calculate the x and y coordinates of a tile given its index 
+	// in the array.  
+	// both are static so that the buildGoalLocationCache function can use them 
+	// from the static main context
 	protected static int getTileLocationX(int tileLocation){
 		return tileLocation % 3;
 	}
@@ -627,6 +632,6 @@ public class eightPuzzle
 				if(boards.get(i).getSuccessor(Board.UP).equals(boards.get(i+1)))
 					System.out.print("Up ");
 		}
-		System.out.println();
+		System.out.println("\n");
 	}
 }
