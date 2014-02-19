@@ -9,6 +9,10 @@ public class eightPuzzle
 	static boolean DEBUG_MODE = false;
 	static boolean VERBOSE_MODE = false;
 	static Board goal;
+	static int[] goalLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	static int[] goalLocationCacheX = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	static int[] goalLocationCacheY = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	
 	public enum HEURISTIC {
 		NONE,
 		CONSTANT, 
@@ -49,6 +53,7 @@ public class eightPuzzle
 	public static void main(String[] args)
 	{
 		goal = new Board(new int[] {1,2,3,8,0,4,7,6,5});
+		buildGoalLocationCache();
 		long startTime, endTime, duration;
 		
 		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
@@ -59,6 +64,7 @@ public class eightPuzzle
 		
 		Board b = new Board(array);
 //		b = Board.randomBoard();
+		
 		
 		// DFS
 		eightPuzzle solver = new eightPuzzle();
@@ -112,25 +118,25 @@ public class eightPuzzle
 		System.out.format("A* (IncorrectTiles) duration = %3.8f s\n", (double) duration
 				/ (double) 1000000000);
 		
-//		/*
-//		 * 4. A* search using the Manhattan heuristic function h = sum of Manhattan
-//		 * distances between all tiles and their correct positions. (Manhattan
-//		 * distance is the sum of the x distance and y distance magnitudes.)
-//		 */
-//		//A* search, h(n)=MANHATTAN_DIST+PATH
-//		// TODO Manhattan distance does not work so this will not operate correctly
-//		b = new Board(array);//easy (d=5)
-//		solver = new eightPuzzle();
-//		System.out.println("===A* (Manhattan Dist)===");
-//		setHeuristicType(HEURISTIC.MANHATTAN_DIST);
-//		System.out.println("Current Heuristic = " + getHeuristicType());
-//		startTime = System.nanoTime();
-//		solver.aStarSearch(b);
-//		endTime = System.nanoTime();
-//		duration = endTime - startTime;
-//		System.out.format("A* (Manhattan Dist) duration = %3.5f s\n", (double) duration
-//				/ (double) 1000000000);
-//
+		/*
+		 * 4. A* search using the Manhattan heuristic function h = sum of Manhattan
+		 * distances between all tiles and their correct positions. (Manhattan
+		 * distance is the sum of the x distance and y distance magnitudes.)
+		 */
+		//A* search, h(n)=MANHATTAN_DIST+PATH
+		// TODO Manhattan distance does not work so this will not operate correctly
+		b = new Board(array);//easy (d=5)
+		solver = new eightPuzzle();
+		System.out.println("===A* (Manhattan Dist)===");
+		setHeuristicType(HEURISTIC.MANHATTAN_DIST);
+		System.out.println("Current Heuristic = " + getHeuristicType());
+		startTime = System.nanoTime();
+		solver.aStarSearch(b);
+		endTime = System.nanoTime();
+		duration = endTime - startTime;
+		System.out.format("A* (Manhattan Dist) duration = %3.5f s\n", (double) duration
+				/ (double) 1000000000);
+
 //		/*
 //		 * 5. A* search using the heuristic function 
 //		 * h = (sum of Manhattan distances) * 2.
@@ -524,36 +530,75 @@ public class eightPuzzle
 	 * Heuristic 2 h2(n) = the Manhattan heuristic function h = sum of
 	 * Manhattan distances between all tiles and their correct positions.
 	 * (Manhattan distance is the sum of the x distance and y distance
-	 * magnitudes.)
+	 * magnitudes.)  
+	 * Algorithm builds a location cache in linear time then getermines the x and y coordinates for 
+	 * each position in linear time so algorithm is O(n) 
 	 */
-	protected int manhattanDistanceHeuristic(Board thatBoard) {
+
+	static protected void buildGoalLocationCache(){
+		// build goal location cache in linear time - placed in a function 
+		// so it's only performed once
+		for (int index = 0; index < 9; index++) {
+			// get the tile value at the index (0..8) and set the location 
+			// cache at that tile value to the index
+			goalLocationCache[goal.board[index]] = index;
+		}
+		for (int tileValue=0; tileValue < 9; tileValue++){
+			goalLocationCacheX[tileValue] =  eightPuzzle.getTileLocationX(goalLocationCache[tileValue]);
+			goalLocationCacheY[tileValue] =  eightPuzzle.getTileLocationY(goalLocationCache[tileValue]);	
+		}		
+		if(VERBOSE_MODE){
+			System.out.println("Goal Location Cache: " + goalLocationCache);
+		}
+	}
+
+	protected int manhattanDistanceHeuristic(Board b) {
 		int manDist=0;
 		int dx = 0;
 		int dy = 0;
-		// TODO implement the manhattan distance function
-		// can't store data tile positions in teh Board class so need another method for 
-		// storing tile positions
-//		for (int tileVal = 1; tileVal < 9; tileVal++) {
-//			dx = Math.abs(getTileLocationX(tileVal) - thatBoard.getTileLocationX(tileVal));
-//			dy = Math.abs(getTileLocationY(tileVal) - thatBoard.getTileLocationY(tileVal));
-//			if (VERBOSE_MODE)
-//				System.out.println("(V, this(x,y) , goal(x,y) ) = (" + tileVal 
-//						+ ", " + getTileLocationX(tileVal)
-//						+ "," + getTileLocationY(tileVal)
-//						+ ", " + thatBoard.getTileLocationX(tileVal)
-//						+ "," + thatBoard.getTileLocationY(tileVal)
-//						+ ")");
-//			manDist += (dx + dy);
-//		}
+		// linear array representing the tiles from 0 to 8
+		int[] bLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+//		int[] goalLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+		
+		// build location caches in linear time
+		for (int index = 0; index < 9; index++) {
+			// get the tile value at the index (0..8) and set the location cache at that tile value to the index
+			bLocationCache[b.board[index]] = index;
+//			goalLocationCache[goal.board[index]] = index; // optimize this to a global variable - no need to recalculate
+		}
+		// for each tile value, get the location and determine the X & Y coordinate, then the difference
+		// ignore the blank tile because it gets moved passively and will be in place when all others are in place
+		for (int tileValue=1; tileValue < 9; tileValue++){
+			dx = Math.abs(getTileLocationX(bLocationCache[tileValue]) - goalLocationCacheX[tileValue]);
+			dy = Math.abs(getTileLocationY(bLocationCache[tileValue]) - goalLocationCacheY[tileValue]);
+			if (VERBOSE_MODE){
+				System.out.println("(tileValue, board(x,y) , goal(x,y) ) = (" + tileValue 
+						+ ", " + getTileLocationX(bLocationCache[tileValue])
+						+ ","  + getTileLocationY(bLocationCache[tileValue])
+						+ ", " + getTileLocationX(goalLocationCache[tileValue])
+						+ ","  + getTileLocationY(goalLocationCache[tileValue])
+						+ ")");
+			}
+			manDist += (dx + dy);
+		}
 		return manDist;
 	}
 
+	// TODO, START HEREvopening the boar.modified broke the Board class - recreate the project??
+	protected static int getTileLocationX(int tileLocation){
+		return tileLocation % 3;
+	}
+	protected static int getTileLocationY(int tileLocation){
+		return (int) Math.floor(tileLocation / 3);
+	}
+	
+	
 	/*
 	 * Heuristic 3 h3(n) = h2(n) * 2 heuristic function h = (sum of
 	 * Manhattan distances) * 2
 	 */
-	protected int doubleManhattanHeuristic(Board board) {
-		return ( manhattanDistanceHeuristic(board)*2 );
+	protected int doubleManhattanHeuristic(Board b) {
+		return ( manhattanDistanceHeuristic(b)*2 );
 	}
 	
 	/*
