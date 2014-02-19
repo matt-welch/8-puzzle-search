@@ -1,12 +1,46 @@
 import java.util.HashSet;
 import java.util.Stack;
 import java.util.Vector;
+import java.util.Comparator;
+import java.util.PriorityQueue;
 
 public class eightPuzzle
 {
 	static boolean DEBUG_MODE = false;
 	static boolean VERBOSE_MODE = false;
 	static Board goal;
+	public enum HEURISTIC {
+		NONE,
+		CONSTANT, 
+		INCORRECT_TILES,
+		PATH_PLUS_INCORRECT,
+		MANHATTAN_DIST,
+		DBL_MANHATTAN
+	};
+	static HEURISTIC currentHeuristic;
+	public long heuristicTime = 0;
+	
+	// BoardComparator.java
+	public class BoardComparator implements Comparator<Board>
+	{
+		// TODO implement a switch to use different heuristics and a getHeuristic method to use it
+		@Override
+		public int compare(Board board1, Board board2)
+		{
+			int retVal = 0;
+			// TODO need to setCostEstimate here for each board
+			
+			if (board1 == board2){// optimization 
+				retVal = 0;
+			}else if (board1.getCostEstimate() < board2.getCostEstimate()){
+				retVal = -1;
+			}else if (board1.getCostEstimate() > board1.getCostEstimate()){
+				retVal = 1;
+			};
+			return retVal;
+		}		
+		
+	}
 	
 	public static void main(String[] args)
 	{
@@ -40,6 +74,7 @@ public class eightPuzzle
 				/ (double) 1000000000);
 		
 	}
+	
 	
 	
 	/*
@@ -133,6 +168,107 @@ public class eightPuzzle
 		if (VERBOSE_MODE){
 			System.out.println("Final Board: \n " + b.toString());
 		}
+	}
+	public void setHeuristicType(HEURISTIC newHeuristic){
+		currentHeuristic = newHeuristic;
+		return;
+	}
+
+	public HEURISTIC getHeuristicType(){
+		return currentHeuristic;
+	}
+	public int calcHeuristic(Board b){
+		long startTime = System.nanoTime();
+		int heuristicValue = 0;
+		
+		switch (currentHeuristic) {
+		case CONSTANT: 
+			heuristicValue = constantHeuristic();
+			break;
+		case INCORRECT_TILES:
+			// this is used for BestFS
+			heuristicValue = incorrectTilesHeuristic(goal);
+			break;
+		case PATH_PLUS_INCORRECT:
+			// this is only used for A* so add the path length to it
+			heuristicValue = incorrectTilesHeuristic(goal);
+			heuristicValue = b.getPathLength() + heuristicValue;
+			break;
+		case MANHATTAN_DIST: 
+			// this is only used for A* so add the path length to it
+			heuristicValue = manhattanDistanceHeuristic(goal);
+			heuristicValue = b.getPathLength() + heuristicValue;
+			break;
+		case DBL_MANHATTAN:
+			// this is only used for A* so add path length to it
+			heuristicValue = doubleManhattanHeuristic(goal);
+			heuristicValue = b.getPathLength() + heuristicValue;
+			break;
+		default :
+			heuristicValue = 0;
+		};
+		if(VERBOSE_MODE)
+			System.out.println("Using " + currentHeuristic + 
+					" h(n)=" + heuristicValue);
+		long endTime = System.nanoTime();
+		// accumulate time spent int he heuristic function
+		heuristicTime += (endTime - startTime);
+		return heuristicValue;
+	}
+	
+	/*
+	 * Heuristic 0 h0(n) = 0 simple heuristic that provides a constant output
+	 * value for heuristics so algorithms can emulate their base cases
+	 */
+	protected int constantHeuristic() {
+		return 1;
+	}
+	
+	/*
+	 * Heuristic 1 h1(n) = number of tiles that are not in the correct place
+	 */
+	protected int incorrectTilesHeuristic(Board b) {
+		int count = 0;
+		for (int x = 0; x < 3; x++) {
+			for (int y = 0; y < 3; y++) {
+				if (b.getTileAt(x, y) != goal.getTileAt(x, y))
+					count++;
+			}
+		}
+		return count;
+	}
+
+	/*
+	 * Heuristic 2 h2(n) = the Manhattan heuristic function h = sum of
+	 * Manhattan distances between all tiles and their correct positions.
+	 * (Manhattan distance is the sum of the x distance and y distance
+	 * magnitudes.)
+	 */
+	protected int manhattanDistanceHeuristic(Board thatBoard) {
+		int manDist=0;
+		int dx = 0;
+		int dy = 0;
+//		for (int tileVal = 1; tileVal < 9; tileVal++) {
+//			dx = Math.abs(getTileLocationX(tileVal) - thatBoard.getTileLocationX(tileVal));
+//			dy = Math.abs(getTileLocationY(tileVal) - thatBoard.getTileLocationY(tileVal));
+//			if (VERBOSE_MODE)
+//				System.out.println("(V, this(x,y) , goal(x,y) ) = (" + tileVal 
+//						+ ", " + getTileLocationX(tileVal)
+//						+ "," + getTileLocationY(tileVal)
+//						+ ", " + thatBoard.getTileLocationX(tileVal)
+//						+ "," + thatBoard.getTileLocationY(tileVal)
+//						+ ")");
+//			manDist += (dx + dy);
+//		}
+		return manDist;
+	}
+
+	/*
+	 * Heuristic 3 h3(n) = h2(n) * 2 heuristic function h = (sum of
+	 * Manhattan distances) * 2
+	 */
+	protected int doubleManhattanHeuristic(Board board) {
+		return ( manhattanDistanceHeuristic(board)*2 );
 	}
 	
 	/*
