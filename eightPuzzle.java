@@ -157,6 +157,181 @@ public class eightPuzzle
 	}
 
 	
+	/*
+	 * 2. Best-first search using the heuristic function h = number of tiles
+	 * that are not in the correct place (not counting the blank).
+	 * 
+	 * implemented as a priority queue where the next node chosen is the
+	 * node with the lowest h1(n) where h1(n) is the number of tiles that are
+	 * not in the correct place (not counting the blank
+	 */
+	public void bestfs(Board b) {
+		int count = 0;// used to output the first 15 nodes visited
+		String first15states = "";
+		// keeps track of visited states
+		HashSet<String> observedNodes = new HashSet<String>();
+		// hold future states to explore in a priority queue
+		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100);
+
+		// set the cost estimate for b based on the current heuristic
+		int h = calcCostEstimate(b);
+		b.setCostEstimate(h);
+
+		System.out.println("h(n) (before) " + h);
+		System.out.println(b.toString());
+		while (!b.equals(goal)) {
+			observedNodes.add(b.toString());
+			// add successor nodes to the queue
+			boardPriorityQueue.addAll(b.getSuccessors());
+			b = boardPriorityQueue.remove();
+			while (observedNodes.contains(b.toString())) {
+				b = boardPriorityQueue.remove();
+			}
+			if (count < 15) {
+				first15states += b + "\n";
+				count++;
+			}
+		}
+		System.out.println(observedNodes.size() + " nodes examined.");
+		if (observedNodes.size() < 10000)
+			printHistory(b);
+		else
+			System.out.println("Not printing history--leads to stack overflow");
+		System.out.println(first15states);
+		showCostFunction(b);
+	}
+
+	/**
+	 * A* is implemented by treating the frontier as a priority queue
+	 * ordered by f(p)=c(p)+h2(n)
+	 * 
+	 * @param b
+	 */
+	public void aStarSearch(Board b) {
+		int count = 0;// used to output the first 15 nodes visited
+		String first15states = "";
+		// keeps track of visited states
+		HashSet<String> observedNodes = new HashSet<String>();
+		// hold future states to explore in a priority queue
+		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100);
+		// set the cost estimate for b based on the current heuristic
+		int h = calcCostEstimate(b);
+		b.setCostEstimate(h);
+
+		System.out.println("Using heuristic: " + getHeuristicType());
+		System.out.println("h(n) (before) " + h);
+		System.out.println(b.toString());
+		while (!b.equals(goal)) {
+			observedNodes.add(b.toString());
+			// add successor nodes to the queue
+			boardPriorityQueue.addAll(b.getSuccessors());
+			b = boardPriorityQueue.remove();
+			while (observedNodes.contains(b.toString())) {
+				b = boardPriorityQueue.remove();
+			}
+			if (count < 15) {
+				first15states += b + "\n";
+				count++;
+			}
+		}
+		System.out.println(observedNodes.size() + " nodes examined.");
+		if (observedNodes.size() < 10000)
+			printHistory(b);
+		else
+			System.out.println("Not printing history--leads to stack overflow");
+		System.out.println(first15states);
+		showCostFunction(b);
+	}
+	/*
+	 * This method implements Iterative Deepening search on the 8 puzzle, keeping
+	 * track of visited nodes to avoid infinite search. Iterative DDeepening is a 
+	 * modification of depth first search where the DFS is repeated at increasing 
+	 * depth bounds, beginning with the root each time.  
+	 * This method also outputs the first 15 nodes visited.
+	 */
+	public void iterativeDeepening(Board root) {
+		int depthBound = -1;
+		final int maxDepth = 50;
+		boolean goalFound = false;
+		// copy root so that b can be reset when it returns from the bounded DFS
+		Board b = root;
+		if (VERBOSE_MODE){
+			System.out.println("Starting State: \n" + root);
+			System.out.println("Goal State: \n" + goal);
+		}
+		while (!goalFound && depthBound < maxDepth){
+			depthBound++;
+			if (VERBOSE_MODE)
+				System.out.println("Searching at depthBound = " + depthBound);
+			goalFound = boundedDFS(b, depthBound);
+//			if (VERBOSE_MODE)
+//				System.out.println("Current state: \n" + b);
+//			// reset the search history - Unnecessary??
+//			b = root;
+		}
+		if (goalFound)
+			System.out.println("Iterative deepening finished successfully in " + depthBound + " rounds.");
+		else
+			System.out.println("Iterative deepening terminated in " + depthBound + " rounds.");
+	}
+	
+	public boolean boundedDFS(Board b, int depthBound){
+		boolean goalFound = false;
+		int pathLength = 0;
+		int count = 0;// used to output the first 15 nodes visited
+		String first15states = "";
+		// keeps track of visited states
+		HashSet<String> observedNodes = new HashSet<String>();
+		// holds future states to explore
+		Stack<Board> stack = new Stack<Board>();
+
+		while (!b.equals(goal) && goalFound == false) {
+			observedNodes.add(b.toString());
+			if(pathLength < depthBound){
+				// don't add any more successors if the depth bound has been reached
+				stack.addAll(b.getSuccessors());
+			}
+			if(stack.isEmpty()){
+				// will cause bounded DFS to terminate unnaturally (empty stack)
+				goalFound=false;
+				break;
+			}
+			b = stack.pop();
+
+			while (observedNodes.contains(b.toString()) && !stack.isEmpty()) {
+				b = stack.pop();
+				if (b.equals(goal)){
+					goalFound = true;
+					System.out.println("Goal found in previously examined node");
+					break;
+				}				
+			}
+			if (count < 15) {
+				first15states += b + "\n";
+				count++;
+			}
+
+			pathLength = b.getPathLength();
+		}
+	
+		if (goalFound == false){
+			// terminate "unnaturally"
+			if (DEBUG_MODE)
+				System.out.println("boundedDFS terminating unnaturally at depth =" + depthBound);
+		}else{
+			// terminate naturally
+			System.out.println(observedNodes.size() + " nodes examined.");
+			if (observedNodes.size() < 10000)
+				printHistory(b);
+			else
+				System.out.println("Not printing history--leads to stack overflow");
+			System.out.println(first15states);
+			showCostFunction(b);
+		}
+		return goalFound;
+	}
+
+	
 	/**
 	 * function prints path and heuristic costs for the solution
 	 * @param b
