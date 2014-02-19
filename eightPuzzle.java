@@ -18,7 +18,7 @@ public class eightPuzzle
 		DBL_MANHATTAN
 	};
 	static HEURISTIC currentHeuristic;
-	public long heuristicTime = 0;
+	static protected long heuristicTime = 0;
 	Comparator<Board> boardComparator = new BoardComparator();
 
 	// BoardComparator.java
@@ -29,13 +29,16 @@ public class eightPuzzle
 		{
 			int retVal = 0;
 			// set Cost Estimate here for each board
-			board1.setCostEstimate(calcCostEstimate(board1));
-			board2.setCostEstimate(calcCostEstimate(board2));
+			int cost1 = calcCostEstimate(board1);
+			int cost2 = calcCostEstimate(board2);
+			board1.setCostEstimate(cost1);
+			board2.setCostEstimate(cost2);
+			
 			if (board1 == board2){// optimization 
 				retVal = 0;
-			}else if (board1.getCostEstimate() < board2.getCostEstimate()){
+			}else if (cost1 < cost2){
 				retVal = -1;
-			}else if (board1.getCostEstimate() > board1.getCostEstimate()){
+			}else if (cost1 > cost2){
 				retVal = 1;
 			};
 			return retVal;
@@ -48,9 +51,9 @@ public class eightPuzzle
 		goal = new Board(new int[] {1,2,3,8,0,4,7,6,5});
 		long startTime, endTime, duration;
 		
-//		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
+		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
 //		int[] array = {1,3,4,8,0,5,7,2,6};//less easy (d=6)
-		int[] array = {2,8,1,0,4,3,7,6,5};// medium
+//		int[] array = {2,8,1,0,4,3,7,6,5};// medium
 //		int[] array = {2,8,1,4,6,3,0,7,5};//hard
 //		int[] array = {5,6,7,4,0,8,3,2,1};//worst
 		
@@ -64,7 +67,7 @@ public class eightPuzzle
 		solver.dfs(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("DFS duration = %3.5f s\n", (double) duration
+		System.out.format("DFS duration = %3.8f s\n", (double) duration
 				/ (double) 1000000000);
 		
 		// BFS
@@ -75,40 +78,40 @@ public class eightPuzzle
 		solver.bfs(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("BFS duration = %3.5f s\n", (double) duration
+		System.out.format("BFS duration = %3.8f s\n", (double) duration
 				/ (double) 1000000000);
 		
 		// following search methods need a goal and heuristics
 		
-//		//BestFS
-//		// use the incorrect tiles heuristic
-//		b = new Board(array);//easy (d=5)
-//		setHeuristicType(HEURISTIC.INCORRECT_TILES);
-//		solver = new eightPuzzle();
-//		System.out.println("===BestFS===");
-//		System.out.println("Current Heuristic = " + getHeuristicType());
-//		startTime = System.nanoTime();
-//		solver.bestfs(b);
-//		endTime = System.nanoTime();
-//		duration = endTime - startTime;
-//		System.out.format("BestFS duration = %3.5f s\n", (double) duration
-//				/ (double) 1000000000);
-//
-//		/*3. A* search using the heuristic function h = number of tiles that are
-//		 * not in the correct place (not counting the blank).*/
-//		//A* search, h(n)=PATH+PLUS_INCORRECT_TILES
-//		b = new Board(array);//easy (d=5)
-//		setHeuristicType(HEURISTIC.PATH_PLUS_INCORRECT);
-//		solver = new eightPuzzle();
-//		System.out.println("===A* (Incorrect Tiles)===");
-//		System.out.println("Current Heuristic = " + getHeuristicType());
-//		startTime = System.nanoTime();
-//		solver.aStarSearch(b);
-//		endTime = System.nanoTime();
-//		duration = endTime - startTime;
-//		System.out.format("A* (IncorrectTiles) duration = %3.5f s\n", (double) duration
-//				/ (double) 1000000000);
-//		
+		//BestFS
+		// use the incorrect tiles heuristic
+		b = new Board(array);//easy (d=5)
+		setHeuristicType(HEURISTIC.INCORRECT_TILES);
+		solver = new eightPuzzle();
+		System.out.println("===BestFS===");
+		System.out.println("Current Heuristic = " + getHeuristicType());
+		startTime = System.nanoTime();
+		solver.bestfs(b);
+		endTime = System.nanoTime();
+		duration = endTime - startTime;
+		System.out.format("BestFS duration = %3.8f s\n", (double) duration
+				/ (double) 1000000000);
+		
+		/*3. A* search using the heuristic function h = number of tiles that are
+		 * not in the correct place (not counting the blank).*/
+		//A* search, h(n)=PATH+PLUS_INCORRECT_TILES
+		b = new Board(array);//easy (d=5)
+		setHeuristicType(HEURISTIC.PATH_PLUS_INCORRECT);
+		solver = new eightPuzzle();
+		System.out.println("===A* (Incorrect Tiles)===");
+		System.out.println("Current Heuristic = " + getHeuristicType());
+		startTime = System.nanoTime();
+		solver.aStarSearch(b);
+		endTime = System.nanoTime();
+		duration = endTime - startTime;
+		System.out.format("A* (IncorrectTiles) duration = %3.8f s\n", (double) duration
+				/ (double) 1000000000);
+		
 //		/*
 //		 * 4. A* search using the Manhattan heuristic function h = sum of Manhattan
 //		 * distances between all tiles and their correct positions. (Manhattan
@@ -144,7 +147,7 @@ public class eightPuzzle
 //		duration = endTime - startTime;
 //		System.out.format("A* (Double Manhattan Dist) duration = %3.5f s\n", (double) duration
 //				/ (double) 1000000000);
-//	
+	
 		/*
 		 * 6. Iterative Deepening search, with testing for duplicate states.
 		 * "Consider making a breadth first search into an iterative deepening
@@ -161,7 +164,7 @@ public class eightPuzzle
 		solver.iterativeDeepening(b);
 		endTime = System.nanoTime();
 		duration = endTime - startTime;
-		System.out.format("Iterative Deepening duration = %3.5f s\n", (double) duration
+		System.out.format("Iterative Deepening duration = %3.8f s\n", (double) duration
 				/ (double) 1000000000);
 		
 	}
@@ -176,6 +179,7 @@ public class eightPuzzle
 	public void dfs(Board b)
 	{
 		int count = 0;//used to output the first 15 nodes visited
+		setHeuristicTime(0);
 		String first15states = "";
 		HashSet<String> observedNodes = new HashSet<String>();//keeps track of visited states
 		Stack<Board> stack = new Stack<Board>();//holds future states to explore 
@@ -201,6 +205,7 @@ public class eightPuzzle
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
+		showCostFunction(b);
 	}
 	
 	// begin additional search methods
@@ -212,6 +217,7 @@ public class eightPuzzle
 	 */
 	public void bfs(Board b) {
 		int count = 0;// used to output the first 15 nodes visited
+		setHeuristicTime(0);
 		String first15states = "";
 		// keeps track of visited states
 		HashSet<String> observedNodes = new HashSet<String>();
@@ -257,11 +263,12 @@ public class eightPuzzle
 	 */
 	public void bestfs(Board b) {
 		int count = 0;// used to output the first 15 nodes visited
+		setHeuristicTime(0);
 		String first15states = "";
 		// keeps track of visited states
 		HashSet<String> observedNodes = new HashSet<String>();
 		// hold future states to explore in a priority queue
-		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100);
+		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100, boardComparator);
 
 		// set the cost estimate for b based on the current heuristic
 		int h = calcCostEstimate(b);
@@ -299,11 +306,12 @@ public class eightPuzzle
 	 */
 	public void aStarSearch(Board b) {
 		int count = 0;// used to output the first 15 nodes visited
+		setHeuristicTime(0);
 		String first15states = "";
 		// keeps track of visited states
 		HashSet<String> observedNodes = new HashSet<String>();
 		// hold future states to explore in a priority queue
-		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100);
+		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100, boardComparator);
 		// set the cost estimate for b based on the current heuristic
 		int h = calcCostEstimate(b);
 		b.setCostEstimate(h);
@@ -340,6 +348,7 @@ public class eightPuzzle
 	 * This method also outputs the first 15 nodes visited.
 	 */
 	public void iterativeDeepening(Board root) {
+		setHeuristicTime(0);
 		int depthBound = -1;
 		final int maxDepth = 50;
 		boolean goalFound = false;
@@ -423,11 +432,10 @@ public class eightPuzzle
 	 * function prints path and heuristic costs for the solution
 	 * @param b
 	 */
-	private void showCostFunction(Board b){
-//		System.out.println("f(p) = c(p) + h(p) = " +
-//				 b.getPathLength() + " + " + b.incorrectTilesHeuristic(goal));
-//		System.out.format("Total heuristic time = %3.8f s\n", (double) b.getHeuristicTime()
-//				/ (double) 1000000000);
+	static private void showCostFunction(Board b){
+		System.out.println("c(p) = " + b.getPathLength() );
+		System.out.format("Total heuristic time = %3.8f s\n", (double) getHeuristicTime()
+				/ (double) 1000000000);
 		if (VERBOSE_MODE){
 			System.out.println("Final Board: \n " + b.toString());
 		}
@@ -449,21 +457,21 @@ public class eightPuzzle
 			break;
 		case INCORRECT_TILES:
 			// this is used for BestFS
-			heuristicValue = incorrectTilesHeuristic(goal);
+			heuristicValue = incorrectTilesHeuristic(b);
 			break;
 		case PATH_PLUS_INCORRECT:
 			// this is only used for A* so add the path length to it
-			heuristicValue = incorrectTilesHeuristic(goal);
+			heuristicValue = incorrectTilesHeuristic(b);
 			heuristicValue = b.getPathLength() + heuristicValue;
 			break;
 		case MANHATTAN_DIST: 
 			// this is only used for A* so add the path length to it
-			heuristicValue = manhattanDistanceHeuristic(goal);
+			heuristicValue = manhattanDistanceHeuristic(b);
 			heuristicValue = b.getPathLength() + heuristicValue;
 			break;
 		case DBL_MANHATTAN:
 			// this is only used for A* so add path length to it
-			heuristicValue = doubleManhattanHeuristic(goal);
+			heuristicValue = doubleManhattanHeuristic(b);
 			heuristicValue = b.getPathLength() + heuristicValue;
 			break;
 		default :
@@ -482,10 +490,13 @@ public class eightPuzzle
 	 * Function returns the total time spent in the heuristic function so far
 	 * @return heuristicTime
 	 */
-	public long getHeuristicTime(){
+	static public long getHeuristicTime(){
 		return heuristicTime;
 	}
-	
+	static public void setHeuristicTime(long timeVal)	{
+		heuristicTime = timeVal;
+		return;
+	}
 
 	/*
 	 * Heuristic 0 h0(n) = 0 simple heuristic that provides a constant output

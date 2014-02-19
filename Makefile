@@ -27,4 +27,4 @@ run: all
 	java eightPuzzle | tee output
 
 time: run
-	grep -i -e 'heuristic time' -e 'finished' -e '===' -e 'f(p)' -e 'h(n)' -e duration -e nodes output --color=auto
+	grep -i -e 'heuristic time' -e 'finished' -e '===' -e 'c(p)' -e 'h(n)' -e duration -e nodes output --color=auto
