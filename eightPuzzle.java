@@ -164,12 +164,14 @@ public class eightPuzzle {
 			}
 		}
 		System.out.println(observedNodes.size() + " nodes examined.");
-		if (observedNodes.size() < 10000)
+		if (observedNodes.size() < 10000){
 			printHistory(b);
+			showCostFunction(b);
+		}
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		showCostFunction(b);
+		
 	}
 
 	// begin additional search methods
@@ -310,13 +312,25 @@ public class eightPuzzle {
 	 * depth bounds, beginning with the root each time.  
 	 * This method also outputs the first 15 nodes visited.
 	 */
-	public void iterativeDeepening(Board b) {
-		int depthBound = 0;
+	public void iterativeDeepening(Board root) {
+		int depthBound = -1;
 		final int maxDepth = 50;
 		boolean goalFound = false;
+		// copy root so that b can be reset when it returns from the bounded DFS
+		Board b = root;
+		if (VERBOSE_MODE){
+			System.out.println("Starting State: \n" + root);
+			System.out.println("Goal State: \n" + goal);
+		}
 		while (!goalFound && depthBound < maxDepth){
-			goalFound = boundedDFS(b, depthBound);
 			depthBound++;
+			if (VERBOSE_MODE)
+				System.out.println("Searching at depthBound = " + depthBound);
+			goalFound = boundedDFS(b, depthBound);
+//			if (VERBOSE_MODE)
+//				System.out.println("Current state: \n" + b);
+//			// reset the search history - Unnecessary??
+//			b = root;
 		}
 		if (goalFound)
 			System.out.println("Iterative deepening finished successfully in " + depthBound + " rounds.");
@@ -326,7 +340,6 @@ public class eightPuzzle {
 	
 	public boolean boundedDFS(Board b, int depthBound){
 		boolean goalFound = false;
-		boolean notAtBound = true;
 		int pathLength = 0;
 		int count = 0;// used to output the first 15 nodes visited
 		String first15states = "";
@@ -335,19 +348,31 @@ public class eightPuzzle {
 		// holds future states to explore
 		Stack<Board> stack = new Stack<Board>();
 
-		while (!b.equals(goal)) {
+		while (!b.equals(goal) && goalFound == false) {
 			observedNodes.add(b.toString());
 			if(pathLength < depthBound){
+				// don't add any more successors if the depth bound has been reached
 				stack.addAll(b.getSuccessors());
 			}
 			if(stack.isEmpty()){
+				// will cause bounded DFS to terminate unnaturally (empty stack)
 				goalFound=false;
 				break;
 			}
 			b = stack.pop();
-
+//			if (b.equals(goal)){
+//				// this should never happen
+//				goalFound = true;
+//				System.out.println("Goal found in the middle");
+//				break;
+//			}
 			while (observedNodes.contains(b.toString()) && !stack.isEmpty()) {
 				b = stack.pop();
+				if (b.equals(goal)){
+					goalFound = true;
+					System.out.println("Goal found in previously examined node");
+					break;
+				}				
 			}
 			if (count < 15) {
 				first15states += b + "\n";
@@ -361,12 +386,12 @@ public class eightPuzzle {
 			pathLength = b.getPathLength();
 		}
 	
-		if (pathLength <= depthBound){
+		if (goalFound == false){
 			// terminate "unnaturally"
-			goalFound = false;
+			if (DEBUG_MODE)
+				System.out.println("boundedDFS terminating unnaturally at depth =" + depthBound);
 		}else{
 			// terminate naturally
-			goalFound = true;
 			System.out.println(observedNodes.size() + " nodes examined.");
 			if (observedNodes.size() < 10000)
 				printHistory(b);
@@ -374,7 +399,6 @@ public class eightPuzzle {
 				System.out.println("Not printing history--leads to stack overflow");
 			System.out.println(first15states);
 			showCostFunction(b);
-
 		}
 		return goalFound;
 	}
