@@ -30,6 +30,7 @@ public class Board implements Comparable<Board>
 	};
 	// myHeuristic is static so it will be a class variable - all instances should share it
 	private static HEURISTIC myHeuristic = HEURISTIC.NONE;
+	private long heuristicTime = 0;
 
 	// constants for specifying move directions
 	public static final int UP = -3;
@@ -349,7 +350,9 @@ public class Board implements Comparable<Board>
 	}
 
 	public int calcHeuristic(Board goal){
+		long startTime = System.nanoTime();
 		int heuristicValue = 0;
+		
 		switch (myHeuristic) {
 		case CONSTANT: 
 			heuristicValue = constantHeuristic();
@@ -379,9 +382,20 @@ public class Board implements Comparable<Board>
 		if(VERBOSE_MODE)
 			System.out.println("Using " + myHeuristic + 
 					" h(n)=" + heuristicValue);
+		long endTime = System.nanoTime();
+		// accumulate time spent int he heuristic function
+		heuristicTime += (endTime - startTime);
 		return heuristicValue;
 	}
 
+	/**
+	 * Function returns the total time spent in the heuristic function so far
+	 * @return heuristicTime
+	 */
+	public long getHeuristicTime(){
+		return heuristicTime;
+	}
+	
 	/*
 	 * Heuristic 0 h0(n) = 0 simple heuristic that provides a constant output
 	 * value for heuristics so algorithms can emulate their base cases

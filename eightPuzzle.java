@@ -6,7 +6,7 @@ import java.util.PriorityQueue;
 //import java.util.LinkedList;
 
 public class eightPuzzle {
-	static boolean DEBUG_MODE = true;
+	static boolean DEBUG_MODE = false;
 	static boolean VERBOSE_MODE = false;
 	static Board goal;
 
@@ -15,10 +15,10 @@ public class eightPuzzle {
 		goal = new Board(new int[] { 1, 2, 3, 8, 0, 4, 7, 6, 5 });
 		long startTime, endTime, duration;
 
-		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
+//		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
 //		int[] array = {1,3,4,8,0,5,7,2,6};//less easy (d=6)
 //		int[] array = {2,8,1,0,4,3,7,6,5};// medium
-//		int[] array = {2,8,1,4,6,3,0,7,5};//hard
+		int[] array = {2,8,1,4,6,3,0,7,5};//hard
 //		int[] array = {5,6,7,4,0,8,3,2,1};//worst
 		
 		Board b = new Board(array);
@@ -154,8 +154,12 @@ public class eightPuzzle {
 		while (!b.equals(goal)) {
 			observedNodes.add(b.toString());
 			stack.addAll(b.getSuccessors());
+			if(stack.isEmpty()){
+				// this shouldn't happen
+				break;
+			}
 			b = stack.pop();
-			while (observedNodes.contains(b.toString())) {
+			while (observedNodes.contains(b.toString()) && !stack.isEmpty()) {
 				b = stack.pop();
 			}
 			if (count < 15) {
@@ -306,7 +310,7 @@ public class eightPuzzle {
 		showCostFunction(b);
 	}
 	/*
-	 * This method implements Iterative Deepeningsearch on the 8 puzzle, keeping
+	 * This method implements Iterative Deepening search on the 8 puzzle, keeping
 	 * track of visited nodes to avoid infinite search. Iterative DDeepening is a 
 	 * modification of depth first search where the DFS is repeated at increasing 
 	 * depth bounds, beginning with the root each time.  
@@ -360,12 +364,7 @@ public class eightPuzzle {
 				break;
 			}
 			b = stack.pop();
-//			if (b.equals(goal)){
-//				// this should never happen
-//				goalFound = true;
-//				System.out.println("Goal found in the middle");
-//				break;
-//			}
+
 			while (observedNodes.contains(b.toString()) && !stack.isEmpty()) {
 				b = stack.pop();
 				if (b.equals(goal)){
@@ -379,10 +378,6 @@ public class eightPuzzle {
 				count++;
 			}
 
-//			if (DEBUG_MODE){
-//				System.out.println("b.pathlength = " + b.getPathLength());
-//				System.out.println("depth = " + depth);
-//			}
 			pathLength = b.getPathLength();
 		}
 	
@@ -419,10 +414,10 @@ public class eightPuzzle {
 	 * @param b
 	 */
 	private void showCostFunction(Board b){
-		if (DEBUG_MODE){
-			System.out.println("f(p) = c(p) + h(p) = " +
-					 b.getPathLength() + " + " + b.incorrectTilesHeuristic(goal));
-		}
+		System.out.println("f(p) = c(p) + h(p) = " +
+				 b.getPathLength() + " + " + b.incorrectTilesHeuristic(goal));
+		System.out.format("Total heuristic time = %3.8f s\n", (double) b.getHeuristicTime()
+				/ (double) 1000000000);
 		if (VERBOSE_MODE){
 			System.out.println("Final Board: \n " + b.toString());
 		}
