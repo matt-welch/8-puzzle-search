@@ -4,3 +4,10 @@
 *.jar
 *.war
 *.ear
+
+# output files
+output*
+
+# eclipse project data
+.classpath
+.project

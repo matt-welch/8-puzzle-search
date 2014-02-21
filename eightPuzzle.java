@@ -12,6 +12,7 @@ public class eightPuzzle
 	static int[] goalLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
 	static int[] goalLocationCacheX = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
 	static int[] goalLocationCacheY = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	private int nodesVisited = 0;
 	
 	public enum HEURISTIC {
 		NONE,
@@ -57,8 +58,8 @@ public class eightPuzzle
 		
 //		int[] array = {1,3,4,8,6,2,7,0,5};//easy (d=5)
 //		int[] array = {2,8,1,0,4,3,7,6,5};// medium
-//		int[] array = {2,8,1,4,6,3,0,7,5};//hard
-		int[] array = {5,6,7,4,8,0,3,2,1};//worst
+		int[] array = {2,8,1,4,6,3,0,7,5};//hard
+//		int[] array = {5,6,7,4,0,8,3,2,1};//worst
 		
 		Board b = new Board(array);
 //		b = Board.randomBoard();
@@ -67,15 +68,15 @@ public class eightPuzzle
 
 		eightPuzzle solver;
 		
-		// DFS
-		solver = new eightPuzzle();
-		System.out.println("===DFS===");
-		startTime = System.nanoTime();
-		solver.dfs(b);
-		endTime = System.nanoTime();
-		duration = endTime - startTime;
-		System.out.format("DFS duration = %3.8f s\n\n", (double) duration
-				/ (double) 1000000000);
+//		// DFS
+//		solver = new eightPuzzle();
+//		System.out.println("===DFS (#0)===");
+//		startTime = System.nanoTime();
+//		solver.dfs(b);
+//		endTime = System.nanoTime();
+//		duration = endTime - startTime;
+//		System.out.format("DFS duration = %3.8f s\n\n", (double) duration
+//				/ (double) 1000000000);
 		
 		// BFS
 		solver = new eightPuzzle();
@@ -124,7 +125,7 @@ public class eightPuzzle
 		//A* search, h(n)=MANHATTAN_DIST+PATH
 		b = new Board(array);//easy (d=5)
 		solver = new eightPuzzle();
-		System.out.println("===A* (Manhattan Dist)===");
+		System.out.println("===A* (Manhattan Dist) (#4)===");
 		setHeuristicType(HEURISTIC.MANHATTAN_DIST);
 		startTime = System.nanoTime();
 		solver.aStarSearch(b);
@@ -140,7 +141,7 @@ public class eightPuzzle
 		//A* search, h(n)=DBL_MANHATTAN_DIST
 		b = new Board(array);
 		solver = new eightPuzzle();
-		System.out.println("===A* (Double Manhattan Dist)===");
+		System.out.println("===A* (Double Manhattan Dist) (#5)===");
 		setHeuristicType(HEURISTIC.DBL_MANHATTAN);
 		startTime = System.nanoTime();
 		solver.aStarSearch(b);
@@ -159,7 +160,7 @@ public class eightPuzzle
 		 */
 		b = new Board(array);
 		solver = new eightPuzzle();
-		System.out.println("===Iterative Deepening===");
+		System.out.println("===Iterative Deepening (#6)===");
 		setHeuristicType(HEURISTIC.NONE);
 		startTime = System.nanoTime();
 		solver.iterativeDeepening(b);
@@ -168,9 +169,7 @@ public class eightPuzzle
 		System.out.format("Iterative Deepening duration = %3.8f s\n\n", (double) duration
 				/ (double) 1000000000);
 	}
-	
-	
-	
+		
 	/*
 	 * This method implements blind depth-first search on the 8 puzzle,
 	 *   keeping track of visited nodes to avoid infinite search. This 
@@ -183,6 +182,7 @@ public class eightPuzzle
 		String first15states = "";
 		HashSet<String> observedNodes = new HashSet<String>();//keeps track of visited states
 		Stack<Board> stack = new Stack<Board>();//holds future states to explore 
+		
 		
 		while(!b.equals(goal))
 		{
@@ -202,7 +202,7 @@ public class eightPuzzle
 		System.out.println(observedNodes.size() + " nodes examined.");
 		if(observedNodes.size() < 10000){
 			printHistory(b);
-			showCostFunction(b, observedNodes);
+			printPathInfo(b, observedNodes);
 		}
 		else
 			System.out.println("Not printing history--leads to stack overflow");
@@ -233,7 +233,8 @@ public class eightPuzzle
 			nodeQueue.addAll(b.getSuccessors()); // add successor nodes to the end of the queue
 			b = nodeQueue.remove(0); // remove the first successor node from the queue to be examined
 
-			// skip over nodes that have been visited before
+			// skip over nodes that have been visited before since any parent of 
+			// a state is also a child of the state
 			while (!b.equals(goal) && observedNodes.contains(b.toString())) { 
 				b = nodeQueue.remove(0);
 			}
@@ -250,9 +251,8 @@ public class eightPuzzle
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		showCostFunction(b, observedNodes);
+		printPathInfo(b, observedNodes);
 	}
-
 	
 	/*
 	 * 2. Best-first search using the heuristic function h = number of tiles
@@ -269,7 +269,7 @@ public class eightPuzzle
 		// keeps track of visited states
 		HashSet<String> observedNodes = new HashSet<String>();
 		// hold future states to explore in a priority queue
-		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100, boardComparator);
+		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(1000, boardComparator);
 
 		// set the cost estimate for b based on the current heuristic
 		int h = calcCostEstimate(b);
@@ -295,7 +295,7 @@ public class eightPuzzle
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		showCostFunction(b, observedNodes);
+		printPathInfo(b, observedNodes);
 	}
 
 	/**
@@ -311,7 +311,7 @@ public class eightPuzzle
 		// keeps track of visited states
 		HashSet<String> observedNodes = new HashSet<String>();
 		// hold future states to explore in a priority queue
-		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(100, boardComparator);
+		PriorityQueue<Board> boardPriorityQueue = new PriorityQueue<Board>(1000, boardComparator);
 		// set the cost estimate for b based on the current heuristic
 		int h = calcCostEstimate(b);
 		b.setCostEstimate(h);
@@ -337,8 +337,9 @@ public class eightPuzzle
 		else
 			System.out.println("Not printing history--leads to stack overflow");
 		System.out.println(first15states);
-		showCostFunction(b, observedNodes);
+		printPathInfo(b, observedNodes);
 	}
+	
 	/*
 	 * This method implements Iterative Deepening search on the 8 puzzle, keeping
 	 * track of visited nodes to avoid infinite search. Iterative DDeepening is a 
@@ -346,44 +347,52 @@ public class eightPuzzle
 	 * depth bounds, beginning with the root each time.  
 	 * This method also outputs the first 15 nodes visited.
 	 */
-	public void iterativeDeepening(Board root) {
+	public void iterativeDeepening(Board b) {
 		setHeuristicTime(0);
 		int depthBound = -1;
-		final int maxDepth = 50;
+		long iterDeepStartTime = 0;
+		final int maxDepth = 36; // diameter of search space & optimal path length (biased high)
+		nodesVisited = 0;
 		boolean goalFound = false;
-		// copy root so that b can be reset when it returns from the bounded DFS
-		Board b = root;
+		
 		if (VERBOSE_MODE){
-			System.out.println("Starting State: \n" + root);
+			System.out.println("Starting State: \n" + b);
 			System.out.println("Goal State: \n" + goal);
 		}
 		while (!goalFound && depthBound < maxDepth){
+			iterDeepStartTime = System.nanoTime();
 			depthBound++;
-			if (VERBOSE_MODE)
-				System.out.println("Searching at depthBound = " + depthBound);
+			if (DEBUG_MODE)
+				System.out.println("Searching at depthBound = " + depthBound + "...");
 			goalFound = boundedDFS(b, depthBound);
-
+			if (DEBUG_MODE) 
+				System.out.format("\tCompleted in %4.4f s\n", (System.nanoTime() - iterDeepStartTime)/1000000000.0 );
 		}
 		if (goalFound)
-			System.out.println("Iterative deepening finished successfully in " + depthBound + " rounds.");
+			System.out.println("Iterative deepening found a solution in " + depthBound + " rounds.");
 		else
-			System.out.println("Iterative deepening terminated in " + depthBound + " rounds.");
+			System.out.println("Iterative deepening terminated unnaturally in " + depthBound + " rounds.");
 	}
 	
 	public boolean boundedDFS(Board b, int depthBound){
 		boolean goalFound = false;
+		boolean loopCheck = true;
 		int pathLength = 0;
-		int count = 0;// used to output the first 15 nodes visited
+		int count = 1;// used to output the first 15 nodes visited
 		String first15states = "";
 		// keeps track of visited states
 		HashSet<String> observedNodes = new HashSet<String>();
 		// holds future states to explore
 		Stack<Board> stack = new Stack<Board>();
 
-		while (!b.equals(goal) && goalFound == false) {
+		while (!b.equals(goal)) {
+			pathLength = b.getPathLength();
 			observedNodes.add(b.toString());
+			if (VERBOSE_MODE)
+				System.out.println(b.toString());
 			if(pathLength < depthBound){
-				// don't add any more successors if the depth bound has been reached
+				// only add more successors of a node if the depth bound has not been reached
+				// as if the graph terminated there
 				stack.addAll(b.getSuccessors());
 			}
 			if(stack.isEmpty()){
@@ -393,35 +402,42 @@ public class eightPuzzle
 			}
 			b = stack.pop();
 
-			while (observedNodes.contains(b.toString()) && !stack.isEmpty()) {
-				b = stack.pop();
-				if (b.equals(goal)){
-					goalFound = true;
-					System.out.println("Goal found in previously examined node");
-					break;
-				}				
+			// don't need cycle checking for iterative deepening since the depth 
+			// bound will be reached before it gets stuck in cycles 
+			if (loopCheck){
+				while (observedNodes.contains(b.toString()) && !stack.isEmpty()) {
+					b = stack.pop();
+				}
+			}
+			if (b.equals(goal)){
+				goalFound = true;
+				System.out.println("Goal found in previously examined node");
+				break;
 			}
 			if (count < 15) {
 				first15states += b + "\n";
-				count++;
 			}
-
-			pathLength = b.getPathLength();
+			count++; // increment count regardless of first15 to accumulate nodesVisited
 		}
 	
+		nodesVisited += count;
+		if (DEBUG_MODE)
+			System.out.println("Iterative Deepening visited " + count + " states, "+ nodesVisited + " total");
 		if (goalFound == false){
 			// terminate "unnaturally"
-			if (DEBUG_MODE)
-				System.out.println("boundedDFS terminating unnaturally at depth =" + depthBound);
+			if (VERBOSE_MODE)
+				System.out.println("boundedDFS terminating unnaturally at depth =" +
+						depthBound  + ", Observed Nodes = " + observedNodes.size());
+
 		}else{
 			// terminate naturally
+			System.out.println(first15states);
 			System.out.println(observedNodes.size() + " nodes examined.");
 			if (observedNodes.size() < 10000)
 				printHistory(b);
 			else
 				System.out.println("Not printing history--leads to stack overflow");
-			System.out.println(first15states);
-			showCostFunction(b, observedNodes);
+			printPathInfo(b, observedNodes);
 		}
 		return goalFound;
 	}
@@ -431,7 +447,7 @@ public class eightPuzzle
 	 * function prints path and heuristic costs for the solution
 	 * @param b
 	 */
-	static private void showCostFunction(Board b, HashSet observedNodes){
+	static private void printPathInfo(Board b, HashSet observedNodes){
 		System.out.println("c(p) = " + b.getPathLength() );
 		if (currentHeuristic != null && currentHeuristic != HEURISTIC.NONE){
 			double hTime = (double) getHeuristicTime() / (double) 1000000000;
@@ -519,18 +535,11 @@ public class eightPuzzle
 		for (int i=0;i<9;i++){
 			bTile = b.board[i];
 			goalTile = goal.board[i];
-			if( (bTile != goalTile)){
+			// if tiles are not equal and goal tile is not 0, count them
+			if( (bTile != goalTile) && goalTile != 0){
 				count++;
 			}
 		}
-		
-//		for (int x = 0; x < 3; x++) {
-//			for (int y = 0; y < 3; y++) {
-//				if (b.getTileAt(x, y) != goal.getTileAt(x, y))
-//					count++;
-//			}
-//		}
-		// offset count by 1 to account for 0
 		return count;
 	}
 
