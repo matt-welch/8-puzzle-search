@@ -25,6 +25,7 @@ public class eightPuzzle
 	static HEURISTIC currentHeuristic;
 	static protected long heuristicTime = 0;
 	Comparator<Board> boardComparator = new BoardComparator();
+	private static boolean loopCheck = true;
 
 	// BoardComparator.java
 	public class BoardComparator implements Comparator<Board>
@@ -66,7 +67,7 @@ public class eightPuzzle
 		String boardSelectionString = "easy";
 		int testsToRun = 0;
 		boolean[] algorithmSelection = {true,true,true,true,true,true};
-
+		
 		if (args.length == 0){
 			printUsage();
 			System.out.println("\n Using defaults [easy, all algorithms]\n");
@@ -127,7 +128,23 @@ public class eightPuzzle
 				algorithmSelection[whichAlgorithm-1] = true;
 			}
 		}
-		
+		if(args.length > 2){
+			// determine if loop checking should be used
+			int intLoopCheck = 1;
+			String errMsg = "Argument[3]" + " must be either 1(true) or 0(false)";
+			try {
+				intLoopCheck = Integer.parseInt(args[2]);
+			} catch (NumberFormatException e) {
+				System.err.println(errMsg);
+				System.exit(1);
+			}
+			if(intLoopCheck == 0){
+				// default is true, this can disable loop checking in all algorithms
+				loopCheck = false;
+				System.out.println("\nWARNING: Loop checking disabled in all algorithms!  "
+						+ "Some algorihthms may not terminate.\n");
+			}
+		}
 		
 		Board b = new Board(array);
 //		b = Board.randomBoard();
@@ -267,9 +284,10 @@ public class eightPuzzle
 			observedNodes.add(b.toString());
 			stack.addAll(b.getSuccessors());
 			b = stack.pop();
-			while(observedNodes.contains(b.toString()))
-			{
-				b = stack.pop();
+			if(loopCheck){
+				while(observedNodes.contains(b.toString()))	{
+					b = stack.pop();
+				}
 			}
 			if(count < 15)
 			{
@@ -313,8 +331,10 @@ public class eightPuzzle
 
 			// skip over nodes that have been visited before since any parent of 
 			// a state is also a child of the state
-			while (!b.equals(goal) && observedNodes.contains(b.toString())) { 
-				b = nodeQueue.remove(0);
+			if(loopCheck){
+				while (!b.equals(goal) && observedNodes.contains(b.toString())) { 
+					b = nodeQueue.remove(0);
+				}
 			}
 			// record the node if less than 15
 			if (count < 15) {
@@ -359,8 +379,10 @@ public class eightPuzzle
 			// add successor nodes to the queue
 			boardPriorityQueue.addAll(b.getSuccessors());
 			b = boardPriorityQueue.remove();
-			while (observedNodes.contains(b.toString())) {
-				b = boardPriorityQueue.remove();
+			if(loopCheck){
+				while (observedNodes.contains(b.toString())) {
+					b = boardPriorityQueue.remove();
+				}
 			}
 			if (count < 15) {
 				first15states += b + "\n";
@@ -401,8 +423,10 @@ public class eightPuzzle
 			// add successor nodes to the queue
 			boardPriorityQueue.addAll(b.getSuccessors());
 			b = boardPriorityQueue.remove();
-			while (observedNodes.contains(b.toString())) {
-				b = boardPriorityQueue.remove();
+			if(loopCheck){
+				while (observedNodes.contains(b.toString())) {
+					b = boardPriorityQueue.remove();
+				}
 			}
 			if (count < 15) {
 				first15states += b + "\n";
@@ -454,7 +478,6 @@ public class eightPuzzle
 	
 	public boolean boundedDFS(Board b, int depthBound){
 		boolean goalFound = false;
-		boolean loopCheck = true;
 		int pathLength = 0;
 		int count = 1;// used to output the first 15 nodes visited
 		String first15states = "";
@@ -727,14 +750,14 @@ public class eightPuzzle
 			"1 2 3\t\t1 3 4\t\t2 8 1\t\t2 8 1\t\t5 6 7\n" + 
 			"8   4\t\t8 6 2\t\t  4 3\t\t4 6 3\t\t4   8\n"+ 
 			"7 6 5\t\t7   5\t\t7 6 5\t\t  7 5\t\t3 2 1\n\n");
-		System.out.println("\nUsage:\tjava eightPuzzle [startingBoard] [algorithmChoice]\n\n" + 
-				"The eightPuzzle solver may be called with 0, 1, or 2 arguments, additional \n"
+		System.out.println("\nUsage:\tjava eightPuzzle [startingBoard] [algorithmChoice] [loopCheck]\n\n" + 
+				"The eightPuzzle solver may be called with 0 to 3 arguments, additional \n"
 				+ "arguments will be ignored.\n" + 
 				"This help output may be called with \"java eightPuzzle -h\".\n" + 
 				"When called with 0 arguments, the default starting board, easy(1), will be used\n" + 
 				"and all algorithms will be analyzed. This can be also modified in source by\n" + 
 				"changing the default board assignment.  The starting board may be specified\n" + 
-				"as an optional integer argument, startingBoard, to select among the following\n" +
+				"as the first integer argument, startingBoard, to select among the following\n" +
 				"boards:\n\n" + boardHeader + 
 				"If two integer arguments are used, the second argument, algorithmChoice, will \n" +
 				"be used to specify which algorithm should be run individually.\n\n" +
@@ -748,7 +771,11 @@ public class eightPuzzle
 				"   distances between all tiles and their correct positions. (Manhattan distance \n" +
 				"   is the sum of the x distance and y distance magnitudes.)\n" +
 				"5: A* search using the heuristic function h = (sum of Manhattan distances) * 2.\n" +
-				"6: Iterative Deepening search, with testing for duplicate states.\n" +
+				"6: Iterative Deepening search, with testing for duplicate states.\n\n" +
+				"The third optional argument is loopCheck which must be a 1 or a 0.\n" +
+				"Calling with '1' will preserve the default behavior of checking for loops in " + 
+				"all of the search algorithms.  Calling with a '0' will disable the loop " + 
+				"checking behavior of the algorithms, allowing some to not terminate.  " +
 				"\n\n");
 	}
 }
