@@ -6,12 +6,12 @@ import java.util.PriorityQueue;
 
 public class eightPuzzle
 {
-	static boolean DEBUG_MODE = false;
-	static boolean VERBOSE_MODE = false;
-	static Board goal;
-	static int[] goalLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
-	static int[] goalLocationCacheX = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
-	static int[] goalLocationCacheY = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	private static boolean DEBUG_MODE = true;
+	private static boolean VERBOSE_MODE = false;
+	private static Board goal;
+	private static int[] goalLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	private static int[] goalLocationCacheX = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	private static int[] goalLocationCacheY = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
 	private int nodesVisited = 0;
 	
 	public enum HEURISTIC {
@@ -344,10 +344,7 @@ public class eightPuzzle
 			// now loop to check if the current node is goal and add its successors to end of queue
 		}
 		System.out.println(observedNodes.size() + " nodes examined.");
-		if (observedNodes.size() < 10000)
-			printHistory(b);
-		else
-			System.out.println("Not printing history--leads to stack overflow");
+		printHistory(b);
 		System.out.println(first15states);
 		printPathInfo(b, observedNodes);
 	}
@@ -390,10 +387,7 @@ public class eightPuzzle
 			}
 		}
 		System.out.println(observedNodes.size() + " nodes examined.");
-		if (observedNodes.size() < 10000)
-			printHistory(b);
-		else
-			System.out.println("Not printing history--leads to stack overflow");
+		printHistory(b);
 		System.out.println(first15states);
 		printPathInfo(b, observedNodes);
 	}
@@ -434,10 +428,7 @@ public class eightPuzzle
 			}
 		}
 		System.out.println(observedNodes.size() + " nodes examined.");
-		if (observedNodes.size() < 10000)
-			printHistory(b);
-		else
-			System.out.println("Not printing history--leads to stack overflow");
+		printHistory(b);
 		System.out.println(first15states);
 		printPathInfo(b, observedNodes);
 	}
@@ -534,10 +525,7 @@ public class eightPuzzle
 			// terminate naturally
 			System.out.println(first15states);
 			System.out.println(observedNodes.size() + " nodes examined.");
-			if (observedNodes.size() < 10000)
-				printHistory(b);
-			else
-				System.out.println("Not printing history--leads to stack overflow");
+			printHistory(b);
 			printPathInfo(b, observedNodes);
 		}
 		return goalFound;
