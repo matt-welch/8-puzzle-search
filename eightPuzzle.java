@@ -1,3 +1,18 @@
+/* *************************************************************************
+* FILENAME: eightPuzzle.java
+* AUTHORS: Matt Welch
+* SCHOOL: Arizona State University
+* CLASS: CSE598: Introduction to Artificial Intelligence
+* INSTRUCTOR: Dr. Joohyung Lee
+* SECTION: 18115
+* TERM: Spring 2014
+* DESCRIPTION:
+* This program solves the eight puzzle with six different search algorithms 
+* on four different board configurations.  Help output is invoked by calling 
+* the program with the "-h" argument like "java eightPuzzle -h"
+****************************************************************************
+*/
+
 import java.util.HashSet;
 import java.util.Stack;
 import java.util.Vector;
