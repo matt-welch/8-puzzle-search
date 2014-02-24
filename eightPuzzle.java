@@ -6,7 +6,7 @@ import java.util.PriorityQueue;
 
 public class eightPuzzle
 {
-	private static boolean DEBUG_MODE = true;
+	private static boolean DEBUG_MODE = false;
 	private static boolean VERBOSE_MODE = false;
 	private static Board goal;
 	private static int[] goalLocationCache = {-1,-1,-1,-1,-1,-1,-1,-1,-1};
@@ -155,7 +155,7 @@ public class eightPuzzle
 		
 //		// DFS
 //		solver = new eightPuzzle();
-//		System.out.println("===DFS (#0)===");
+//		System.out.println(">>>DFS (#0)>>>");
 //		startTime = System.nanoTime();
 //		solver.dfs(b);
 //		endTime = System.nanoTime();
@@ -166,7 +166,7 @@ public class eightPuzzle
 		if(algorithmSelection[0]){
 			// BFS
 			solver = new eightPuzzle();
-			System.out.println("===BFS (#1)===");
+			System.out.println(">>>BFS (#1)<<<");
 			startTime = System.nanoTime();
 			solver.bfs(b);
 			endTime = System.nanoTime();
@@ -180,7 +180,7 @@ public class eightPuzzle
 			// use the incorrect tiles heuristic
 			b = new Board(array);
 			solver = new eightPuzzle();
-			System.out.println("===BestFS (#2)===");
+			System.out.println(">>>BestFS (#2)<<<");
 			setHeuristicType(HEURISTIC.INCORRECT_TILES);
 			startTime = System.nanoTime();
 			solver.bestfs(b);
@@ -196,7 +196,7 @@ public class eightPuzzle
 			//A* search, h(n)=PATH+PLUS_INCORRECT_TILES
 			b = new Board(array);
 			solver = new eightPuzzle();
-			System.out.println("===A* (Incorrect Tiles) (#3)===");
+			System.out.println(">>>A* (Incorrect Tiles) (#3)<<<");
 			setHeuristicType(HEURISTIC.PATH_PLUS_INCORRECT);
 			startTime = System.nanoTime();
 			solver.aStarSearch(b);
@@ -215,7 +215,7 @@ public class eightPuzzle
 			//A* search, h(n)=MANHATTAN_DIST+PATH
 			b = new Board(array);
 			solver = new eightPuzzle();
-			System.out.println("===A* (Manhattan Dist) (#4)===");
+			System.out.println(">>>A* (Manhattan Dist) (#4)<<<");
 			setHeuristicType(HEURISTIC.MANHATTAN_DIST);
 			startTime = System.nanoTime();
 			solver.aStarSearch(b);
@@ -233,7 +233,7 @@ public class eightPuzzle
 			//A* search, h(n)=DBL_MANHATTAN_DIST
 			b = new Board(array);
 			solver = new eightPuzzle();
-			System.out.println("===A* (Double Manhattan Dist) (#5)===");
+			System.out.println(">>>A* (Double Manhattan Dist) (#5)<<<");
 			setHeuristicType(HEURISTIC.DBL_MANHATTAN);
 			startTime = System.nanoTime();
 			solver.aStarSearch(b);
@@ -254,7 +254,7 @@ public class eightPuzzle
 			 */
 			b = new Board(array);
 			solver = new eightPuzzle();
-			System.out.println("===Iterative Deepening (#6)===");
+			System.out.println(">>>Iterative Deepening (#6)<<<");
 			setHeuristicType(HEURISTIC.NONE);
 			startTime = System.nanoTime();
 			solver.iterativeDeepening(b);
@@ -295,7 +295,7 @@ public class eightPuzzle
 				count++;
 			}
 		}
-		System.out.println(observedNodes.size() + " nodes examined.");
+		System.out.println("Nodes examined = " + observedNodes.size() );
 		if(observedNodes.size() < 10000){
 			printHistory(b);
 			printPathInfo(b, observedNodes);
@@ -343,7 +343,7 @@ public class eightPuzzle
 			}
 			// now loop to check if the current node is goal and add its successors to end of queue
 		}
-		System.out.println(observedNodes.size() + " nodes examined.");
+		System.out.println("Nodes examined = " + observedNodes.size() );
 		printHistory(b);
 		System.out.println(first15states);
 		printPathInfo(b, observedNodes);
@@ -386,7 +386,7 @@ public class eightPuzzle
 				count++;
 			}
 		}
-		System.out.println(observedNodes.size() + " nodes examined.");
+		System.out.println("Nodes examined = " + observedNodes.size() );
 		printHistory(b);
 		System.out.println(first15states);
 		printPathInfo(b, observedNodes);
@@ -427,7 +427,7 @@ public class eightPuzzle
 				count++;
 			}
 		}
-		System.out.println(observedNodes.size() + " nodes examined.");
+		System.out.println("Nodes examined = " + observedNodes.size() );
 		printHistory(b);
 		System.out.println(first15states);
 		printPathInfo(b, observedNodes);
@@ -524,7 +524,7 @@ public class eightPuzzle
 		}else{
 			// terminate naturally
 			System.out.println(first15states);
-			System.out.println(observedNodes.size() + " nodes examined.");
+			System.out.println("Nodes examined = " + observedNodes.size() );
 			printHistory(b);
 			printPathInfo(b, observedNodes);
 		}
